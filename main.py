@@ -4,6 +4,7 @@ from git import Repo
 import os.path
 from time import sleep
 import pathlib
+import configparser
 
 
 def pull_from_repo(repo_path):
@@ -20,10 +21,11 @@ def push_to_repo(repo_path, message):
     origin.push()
 
 
-dev_token = "5077844941:AAG5IDoj6yK_hRia89aLBlrAzEbloLrgDAE"
-prod_token = "5024357452:AAHkL-PhzqlpybAOhSdee3HsQDi150v7qww"
-token = dev_token
-bot = telebot.TeleBot(token=token)
+config = configparser.ConfigParser()
+config.read('config.ini')
+telegram_api_token = config['telegram']['telegram_api_token']
+bot = telebot.TeleBot(token=telegram_api_token)
+
 
 def build_menu(buttons,
                n_cols,
@@ -87,7 +89,7 @@ def update_button_list(inline_keyboard, change=''):
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
-    bot.send_message(message.chat.id, "'ОССтатус' для старта")
+    bot.send_message(message.chat.id, "'osstatus' для меню статуса сервисов")
 
 
 @bot.message_handler(commands=['osstatus'])
