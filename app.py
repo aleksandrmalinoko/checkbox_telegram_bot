@@ -71,7 +71,10 @@ def generate_report(inline_keyboard):
     report = ''
     inline_keyboard = inline_keyboard[:-1]
     for item in inline_keyboard:
-        report += f"{item[0]['text']} {item[1]['text']}\n"
+        if item[1]['text'] != "Успешно":
+            report += f"{item[0]['text']} {item[1]['text']}\n"
+        else:
+            report += f"{item[0]['text']} - ?\n"
     return report
 
 
@@ -198,6 +201,7 @@ def query_handler(call):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('generate_report'))
 def query_handler(call):
+    bot.answer_callback_query(callback_query_id=call.id, text='')
     report_message = generate_report(call.message.json['reply_markup']['inline_keyboard'])
     bot.send_message(chat_id=call.message.chat.id, text=report_message)
 
