@@ -51,16 +51,28 @@ def generate_button_list(list_of_service: list):
         button_list.append(InlineKeyboardButton(service, callback_data=service_name))
         button_list.append(InlineKeyboardButton("Успешно", callback_data=f"{service_name}_ok"))
         button_list.append(InlineKeyboardButton("Ошибки", callback_data=f"{service_name}_neok"))
+    button_list.append(InlineKeyboardButton("Сгенерировать отчет", callback_data=f"generate_report"))
     return button_list
 
 
 def generate_button_list_from_keyboard(inline_keyboard):
     button_list = []
     for service in inline_keyboard:
-        button_list.append(InlineKeyboardButton(service[0]['text'], callback_data=service[0]['callback_data']))
-        button_list.append(InlineKeyboardButton(service[1]['text'], callback_data=service[1]['callback_data']))
-        button_list.append(InlineKeyboardButton(service[2]['text'], callback_data=service[2]['callback_data']))
+        if service[0]['text'] != "Сгенерировать отчет":
+            button_list.append(InlineKeyboardButton(service[0]['text'], callback_data=service[0]['callback_data']))
+            button_list.append(InlineKeyboardButton(service[1]['text'], callback_data=service[1]['callback_data']))
+            button_list.append(InlineKeyboardButton(service[2]['text'], callback_data=service[2]['callback_data']))
+        else:
+            button_list.append(InlineKeyboardButton("Сгенерировать отчет", callback_data=f"generate_report"))
     return button_list
+
+
+def generate_report(inline_keyboard):
+    report = ''
+    inline_keyboard = inline_keyboard[:-1]
+    for item in inline_keyboard:
+        report += f"{item[0]['text']} {item[1]['text']}\n"
+    return report
 
 
 def update_button_list(inline_keyboard, change=''):
@@ -68,6 +80,9 @@ def update_button_list(inline_keyboard, change=''):
     service_name, service_change_status = change.split('_')
     if service_change_status == 'otm':
         for idx, service in enumerate(button_list):
+            if service.callback_data == 'generate_report':
+                button_list[idx] = InlineKeyboardButton("Сгенерировать отчет", callback_data=f"generate_report")
+                continue
             if service.callback_data == service_name + '_status':
                 button_list[idx] = InlineKeyboardButton("Успешно", callback_data=f"{service_name}_ok")
             if service.callback_data == service_name + '_otm':
@@ -80,6 +95,9 @@ def update_button_list(inline_keyboard, change=''):
     else:
         return button_list
     for idx, service in enumerate(button_list):
+        if service.callback_data == 'generate_report':
+            button_list[idx] = InlineKeyboardButton("Сгенерировать отчет", callback_data=f"generate_report")
+            continue
         if service.callback_data == service_name + '_ok':
             button_list[idx] = InlineKeyboardButton(status, callback_data=f"{service_name}_status")
         if service.callback_data == service_name + '_neok':
@@ -166,7 +184,7 @@ def delete_os(message):
     bot.send_message(message.from_user.id, "Сервис удален", reply_markup=telebot.types.ReplyKeyboardRemove())
 
 
-@bot.callback_query_handler(func=lambda call: True)
+@bot.callback_query_handler(func=lambda call: not call.data.startswith('generate_report'))
 def query_handler(call):
     bot.answer_callback_query(callback_query_id=call.id, text='')
     button_list = update_button_list(call.message.json['reply_markup']['inline_keyboard'], call.data)
@@ -178,5 +196,15 @@ def query_handler(call):
                           )
 
 
+@bot.callback_query_handler(func=lambda call: call.data.startswith('generate_report'))
+def query_handler(call):
+    report_message = generate_report(call.message.json['reply_markup']['inline_keyboard'])
+    bot.send_message(chat_id=call.message.chat.id, text=report_message)
+
+
 bot.infinity_polling()
 # bot.stop_bot()
+# {'text': '✅', 'callback_data': '1498_status'}
+# {'text': '❌', 'callback_data': '1512_status'}
+# inline_keyboard[0][0]['text']
+# inline_keyboard[0][1]['text']
