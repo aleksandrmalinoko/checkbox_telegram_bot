@@ -127,6 +127,20 @@ def os_list_message(message):
     bot.send_message(message.chat.id, str_service_list)
 
 
+@bot.message_handler(commands=['ssstatus'])
+def ss_status_message(message):
+    button_list = generate_button_list(get_list_of_service(filename='ss_service_list.txt'))
+    reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=3))
+    bot.send_message(message.chat.id, "Статус сервисов", reply_markup=reply_markup)
+
+
+@bot.message_handler(commands=['sslist'])
+def ss_list_message(message):
+    services_list = get_list_of_service(filename='ss_service_list.txt')
+    str_service_list = '\n'.join(services_list)
+    bot.send_message(message.chat.id, str_service_list)
+
+
 @bot.message_handler(commands=['1570status_do_not_use'])
 def status_1570_message(message):
     with open('testcheck/1570_init_check.txt', 'w') as request_file:
@@ -183,6 +197,47 @@ def delete_os(message):
                 services[i-1] = services[i-1].replace('\n', '')
             break
     with open("os_service_list.txt", 'w') as os_service_list_file:
+        os_service_list_file.writelines(services)
+    bot.send_message(message.from_user.id, "Сервис удален", reply_markup=telebot.types.ReplyKeyboardRemove())
+
+
+@bot.message_handler(commands=['addss'])
+def add_ss_message(message):
+    bot.send_message(message.from_user.id, "Название нового СС")
+    bot.register_next_step_handler(message, add_ss)
+
+
+def add_ss(message):
+    if message.text[0] == '/':
+        bot.send_message(message.from_user.id, "Добавление сервиса отменено")
+    with open("ss_service_list.txt", 'a') as os_service_list:
+        os_service_list.write(f"\n{message.text}")
+    bot.send_message(message.from_user.id, "Сервис добавлен")
+
+
+@bot.message_handler(commands=['deletess'])
+def delete_ss_message(message):
+    keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    services_list = get_list_of_service(filename='ss_service_list.txt')
+    for service in services_list:
+        button = telebot.types.KeyboardButton(text=service)
+        keyboard.add(button)
+    bot.send_message(message.chat.id, "Название СС для удаления", reply_markup=keyboard)
+    bot.register_next_step_handler(message, delete_ss)
+
+
+def delete_ss(message):
+    if message.text[0] == '/':
+        bot.send_message(message.from_user.id, "Удаление сервиса отменено")
+    with open("ss_service_list.txt", 'r') as os_service_list_file:
+        services = os_service_list_file.readlines()
+    for i in range(len(services)):
+        if services[i] == message.text or services[i] == f"{message.text}\n":
+            services.pop(i)
+            if i != 0:
+                services[i-1] = services[i-1].replace('\n', '')
+            break
+    with open("ss_service_list.txt", 'w') as os_service_list_file:
         os_service_list_file.writelines(services)
     bot.send_message(message.from_user.id, "Сервис удален", reply_markup=telebot.types.ReplyKeyboardRemove())
 
