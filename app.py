@@ -148,11 +148,11 @@ def status_message(message):
 
 def service_type_status(message):
     if message.text == "Отмена":
-        bot.send_message(message.from_user.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
         return 0
     else:
         service_file = f'{message.text}_service_list.txt'
-        bot.send_message(message.from_user.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
     button_list = generate_button_list(get_list(filename=service_file))
     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=3))
     bot.send_message(message.chat.id, "Статус сервисов", reply_markup=reply_markup)
@@ -173,11 +173,11 @@ def list_message(message):
 
 def service_type_list(message):
     if message.text == "Отмена":
-        bot.send_message(message.from_user.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
         return 0
     else:
         service_file = f'{message.text}_service_list.txt'
-        bot.send_message(message.from_user.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
     services_list = get_list(filename=service_file)
     str_service_list = '\n'.join(services_list)
     bot.send_message(message.chat.id, str_service_list)
@@ -198,25 +198,25 @@ def add_service_message(message):
 
 def service_type_add(message):
     if message.text == "Отмена":
-        bot.send_message(message.from_user.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
         return 0
     else:
         service_file = f'{message.text}_service_list.txt'
-        bot.send_message(message.from_user.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
     keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     button = telebot.types.KeyboardButton(text="Отмена")
     keyboard.add(button)
-    bot.send_message(message.from_user.id, "Название нового сервиса", reply_markup=keyboard)
+    bot.send_message(message.chat.id, "Название нового сервиса", reply_markup=keyboard)
     bot.register_next_step_handler(message, add_os, service_type=service_file)
 
 
 def add_os(message, service_type):
     if message.text == "Отмена":
-        bot.send_message(message.from_user.id, "Добавление сервиса отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Добавление сервиса отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
         return 0
     with open(service_type, 'a') as service_list:
         service_list.write(f"\n{message.text}")
-    bot.send_message(message.from_user.id, "Сервис добавлен", reply_markup=telebot.types.ReplyKeyboardRemove())
+    bot.send_message(message.chat.id, "Сервис добавлен", reply_markup=telebot.types.ReplyKeyboardRemove())
 
 
 @bot.message_handler(commands=['deleteservice'])
@@ -234,11 +234,11 @@ def delete_os_message(message):
 
 def service_type_delete(message):
     if message.text == "Отмена":
-        bot.send_message(message.from_user.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
         return 0
     else:
         service_file = f'{message.text}_service_list.txt'
-        bot.send_message(message.from_user.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
     keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     services_list = get_list(filename=service_file)
     for service in services_list:
@@ -252,7 +252,7 @@ def service_type_delete(message):
 
 def delete_os(message, service_file):
     if message.text == "Отмена":
-        bot.send_message(message.from_user.id, "Удаление сервиса отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Удаление сервиса отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
         return 0
     with open(service_file, 'r') as os_service_list_file:
         services = os_service_list_file.readlines()
@@ -264,7 +264,7 @@ def delete_os(message, service_file):
             break
     with open(service_file, 'w') as os_service_list_file:
         os_service_list_file.writelines(services)
-    bot.send_message(message.from_user.id, "Сервис удален", reply_markup=telebot.types.ReplyKeyboardRemove())
+    bot.send_message(message.chat.id, "Сервис удален", reply_markup=telebot.types.ReplyKeyboardRemove())
 
 
 @bot.message_handler(commands=['survey'])
@@ -282,11 +282,11 @@ def survey_message(message):
 
 def team_type_survey(message):
     if message.text == "Отмена":
-        bot.send_message(message.from_user.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
         return 0
     else:
         service_file = f'{message.text}_users.txt'
-        bot.send_message(message.from_user.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
     button_list = generate_button_list(get_list(filename=service_file), ok_text="Да", fail_text="Нет", cat_name=True)
     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=3))
     bot.send_message(message.chat.id, "Опрос", reply_markup=reply_markup)
