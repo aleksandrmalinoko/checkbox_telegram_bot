@@ -91,7 +91,7 @@ def generate_report(inline_keyboard):
     report = ''
     inline_keyboard = inline_keyboard[:-1]
     for item in inline_keyboard:
-        if item[1]['text'] != "Успешно":
+        if item[2]['text'] == "Отмена":
             report += f"{item[0]['text']} {item[1]['text']}\n"
         else:
             report += f"{item[0]['text']} - ?\n"
