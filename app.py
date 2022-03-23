@@ -62,13 +62,15 @@ def get_list(filename):
         return service_list.read().split('\n')
 
 
-def generate_button_list(list_of_service: list):
+def generate_button_list(list_of_service: list, ok_text="Успешно", fail_text="Ошибки", cat_name=False):
     button_list = []
     for service in list_of_service:
         service_name = service[:4]
+        if cat_name:
+            service = service[5:]
         button_list.append(InlineKeyboardButton(service, callback_data=service_name))
-        button_list.append(InlineKeyboardButton("Успешно", callback_data=f"{service_name}_ok"))
-        button_list.append(InlineKeyboardButton("Ошибки", callback_data=f"{service_name}_neok"))
+        button_list.append(InlineKeyboardButton(ok_text, callback_data=f"{service_name}_ok"))
+        button_list.append(InlineKeyboardButton(fail_text, callback_data=f"{service_name}_neok"))
     button_list.append(InlineKeyboardButton("Сгенерировать отчет", callback_data=f"generate_report"))
     return button_list
 
@@ -96,7 +98,7 @@ def generate_report(inline_keyboard):
     return report
 
 
-def update_button_list(inline_keyboard, change=''):
+def update_button_list(inline_keyboard, change='', ok_text="Успешно", fail_text="Ошибки"):
     button_list = generate_button_list_from_keyboard(inline_keyboard)
     service_name, service_change_status = change.split('_')
     if service_change_status == 'otm':
@@ -105,9 +107,9 @@ def update_button_list(inline_keyboard, change=''):
                 button_list[idx] = InlineKeyboardButton("Сгенерировать отчет", callback_data=f"generate_report")
                 continue
             if service.callback_data == service_name + '_status':
-                button_list[idx] = InlineKeyboardButton("Успешно", callback_data=f"{service_name}_ok")
+                button_list[idx] = InlineKeyboardButton(ok_text, callback_data=f"{service_name}_ok")
             if service.callback_data == service_name + '_otm':
-                button_list[idx] = InlineKeyboardButton("Ошибки", callback_data=f"{service_name}_neok")
+                button_list[idx] = InlineKeyboardButton(fail_text, callback_data=f"{service_name}_neok")
         return button_list
     if service_change_status == 'ok':
         status = '✅'
@@ -265,12 +267,43 @@ def delete_os(message, service_file):
     bot.send_message(message.from_user.id, "Сервис удален", reply_markup=telebot.types.ReplyKeyboardRemove())
 
 
+@bot.message_handler(commands=['survey'])
+def survey_message(message):
+    keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    service_types = get_list(filename='service_types.txt')
+    for type_service in service_types:
+        button = telebot.types.KeyboardButton(text=type_service)
+        keyboard.add(button)
+    button = telebot.types.KeyboardButton(text="Отмена")
+    keyboard.add(button)
+    bot.send_message(message.chat.id, "Выберите команду", reply_markup=keyboard)
+    bot.register_next_step_handler(message, team_type_survey)
+
+
+def team_type_survey(message):
+    if message.text == "Отмена":
+        bot.send_message(message.from_user.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        return 0
+    else:
+        service_file = f'{message.text}_users.txt'
+        bot.send_message(message.from_user.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
+    button_list = generate_button_list(get_list(filename=service_file), ok_text="Да", fail_text="Нет", cat_name=True)
+    reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=3))
+    bot.send_message(message.chat.id, "Опрос", reply_markup=reply_markup)
+
+
 @bot.callback_query_handler(func=lambda call: not call.data.startswith('generate_report'))
 def query_handler(call):
     bot.answer_callback_query(callback_query_id=call.id, text='')
-    button_list = update_button_list(call.message.json['reply_markup']['inline_keyboard'], call.data)
+    if call.message.html_text == "Статус сервисов":
+        ok_text = "Успешно"
+        fail_text = "Ошибки"
+    else:
+        ok_text = "Да"
+        fail_text = "Нет"
+    button_list = update_button_list(call.message.json['reply_markup']['inline_keyboard'], call.data, ok_text, fail_text)
     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=3))
-    bot.edit_message_text(text="Статус сервисов",
+    bot.edit_message_text(text=call.message.html_text,
                           chat_id=call.message.chat.id,
                           message_id=call.message.id,
                           reply_markup=reply_markup
