@@ -6,20 +6,38 @@ from time import sleep
 import pathlib
 import configparser
 
-
-def pull_from_repo(repo_path):
-    repo = Repo(repo_path)
-    origin = repo.remote('origin')
-    origin.pull()
-
-
-def push_to_repo(repo_path, message):
-    repo = Repo(repo_path)
-    repo.git.add(all=True)
-    repo.index.commit(message)
-    origin = repo.remote('origin')
-    origin.push()
-
+# автоматизированная проверка
+# def pull_from_repo(repo_path):
+#     repo = Repo(repo_path)
+#     origin = repo.remote('origin')
+#     origin.pull()
+#
+#
+# def push_to_repo(repo_path, message):
+#     repo = Repo(repo_path)
+#     repo.git.add(all=True)
+#     repo.index.commit(message)
+#     origin = repo.remote('origin')
+#     origin.push()
+#
+#
+# @bot.message_handler(commands=['1570status_do_not_use'])
+# def status_1570_message(message):
+#     with open('testcheck/1570_init_check.txt', 'w') as request_file:
+#         request_file.write("init check")
+#     push_to_repo('testcheck', 'init check 1570')
+#     while True:
+#         pull_from_repo('testcheck/')
+#         if '1570_check_result.txt' in os.listdir('testcheck'):
+#             with open('testcheck/1570_check_result.txt', 'r') as answer_file:
+#                 report = answer_file.read()
+#             file_to_rem = pathlib.Path("testcheck/1570_check_result.txt")
+#             file_to_rem.unlink()
+#             push_to_repo('testcheck', 'response 1570 check result')
+#             break
+#         else:
+#             sleep(5)
+#     bot.send_message(message.chat.id, str(report))
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -39,7 +57,7 @@ def build_menu(buttons,
     return menu
 
 
-def get_list_of_service(filename='os_service_list.txt'):
+def get_list(filename):
     with open(filename, 'r') as service_list:
         return service_list.read().split('\n')
 
@@ -113,123 +131,128 @@ def start_message(message):
     bot.send_message(message.chat.id, "'osstatus' для меню статуса сервисов")
 
 
-@bot.message_handler(commands=['osstatus'])
-def os_status_message(message):
-    button_list = generate_button_list(get_list_of_service(filename='os_service_list.txt'))
+@bot.message_handler(commands=['status'])
+def status_message(message):
+    keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    service_types = get_list(filename='service_types.txt')
+    for type_service in service_types:
+        button = telebot.types.KeyboardButton(text=type_service)
+        keyboard.add(button)
+    button = telebot.types.KeyboardButton(text="Отмена")
+    keyboard.add(button)
+    bot.send_message(message.chat.id, "Выберите тип сервисов", reply_markup=keyboard)
+    bot.register_next_step_handler(message, service_type_status)
+
+
+def service_type_status(message):
+    if message.text == "Отмена":
+        bot.send_message(message.from_user.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        return 0
+    else:
+        service_file = f'{message.text}_service_list.txt'
+        bot.send_message(message.from_user.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
+    button_list = generate_button_list(get_list(filename=service_file))
     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=3))
     bot.send_message(message.chat.id, "Статус сервисов", reply_markup=reply_markup)
 
 
-@bot.message_handler(commands=['oslist'])
-def os_list_message(message):
-    services_list = get_list_of_service(filename='os_service_list.txt')
+@bot.message_handler(commands=['list'])
+def list_message(message):
+    keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    service_types = get_list(filename='service_types.txt')
+    for type_service in service_types:
+        button = telebot.types.KeyboardButton(text=type_service)
+        keyboard.add(button)
+    button = telebot.types.KeyboardButton(text="Отмена")
+    keyboard.add(button)
+    bot.send_message(message.chat.id, "Выберите тип сервисов", reply_markup=keyboard)
+    bot.register_next_step_handler(message, service_type_list)
+
+
+def service_type_list(message):
+    if message.text == "Отмена":
+        bot.send_message(message.from_user.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        return 0
+    else:
+        service_file = f'{message.text}_service_list.txt'
+        bot.send_message(message.from_user.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
+    services_list = get_list(filename=service_file)
     str_service_list = '\n'.join(services_list)
     bot.send_message(message.chat.id, str_service_list)
 
 
-@bot.message_handler(commands=['ssstatus'])
-def ss_status_message(message):
-    button_list = generate_button_list(get_list_of_service(filename='ss_service_list.txt'))
-    reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=3))
-    bot.send_message(message.chat.id, "Статус сервисов", reply_markup=reply_markup)
+@bot.message_handler(commands=['addservice'])
+def add_service_message(message):
+    keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    service_types = get_list(filename='service_types.txt')
+    for type_service in service_types:
+        button = telebot.types.KeyboardButton(text=type_service)
+        keyboard.add(button)
+    button = telebot.types.KeyboardButton(text="Отмена")
+    keyboard.add(button)
+    bot.send_message(message.chat.id, "Выберите тип сервисов", reply_markup=keyboard)
+    bot.register_next_step_handler(message, service_type_add)
 
 
-@bot.message_handler(commands=['sslist'])
-def ss_list_message(message):
-    services_list = get_list_of_service(filename='ss_service_list.txt')
-    str_service_list = '\n'.join(services_list)
-    bot.send_message(message.chat.id, str_service_list)
+def service_type_add(message):
+    if message.text == "Отмена":
+        bot.send_message(message.from_user.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        return 0
+    else:
+        service_file = f'{message.text}_service_list.txt'
+        bot.send_message(message.from_user.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
+    keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    button = telebot.types.KeyboardButton(text="Отмена")
+    keyboard.add(button)
+    bot.send_message(message.from_user.id, "Название нового сервиса", reply_markup=keyboard)
+    bot.register_next_step_handler(message, add_os, service_type=service_file)
 
 
-@bot.message_handler(commands=['1570status_do_not_use'])
-def status_1570_message(message):
-    with open('testcheck/1570_init_check.txt', 'w') as request_file:
-        request_file.write("init check")
-    push_to_repo('testcheck', 'init check 1570')
-    while True:
-        pull_from_repo('testcheck/')
-        if '1570_check_result.txt' in os.listdir('testcheck'):
-            with open('testcheck/1570_check_result.txt', 'r') as answer_file:
-                report = answer_file.read()
-            file_to_rem = pathlib.Path("testcheck/1570_check_result.txt")
-            file_to_rem.unlink()
-            push_to_repo('testcheck', 'response 1570 check result')
-            break
-        else:
-            sleep(5)
-    bot.send_message(message.chat.id, str(report))
+def add_os(message, service_type):
+    if message.text == "Отмена":
+        bot.send_message(message.from_user.id, "Добавление сервиса отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        return 0
+    with open(service_type, 'a') as service_list:
+        service_list.write(f"\n{message.text}")
+    bot.send_message(message.from_user.id, "Сервис добавлен", reply_markup=telebot.types.ReplyKeyboardRemove())
 
 
-@bot.message_handler(commands=['addos'])
-def add_os_message(message):
-    bot.send_message(message.from_user.id, "Название нового ОС")
-    bot.register_next_step_handler(message, add_os)
-
-
-def add_os(message):
-    if message.text[0] == '/':
-        bot.send_message(message.from_user.id, "Добавление сервиса отменено")
-    with open("os_service_list.txt", 'a') as os_service_list:
-        os_service_list.write(f"\n{message.text}")
-    bot.send_message(message.from_user.id, "Сервис добавлен")
-
-
-@bot.message_handler(commands=['deleteos'])
+@bot.message_handler(commands=['deleteservice'])
 def delete_os_message(message):
     keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    services_list = get_list_of_service(filename='os_service_list.txt')
-    for service in services_list:
-        button = telebot.types.KeyboardButton(text=service)
+    service_types = get_list(filename='service_types.txt')
+    for type_service in service_types:
+        button = telebot.types.KeyboardButton(text=type_service)
         keyboard.add(button)
-    bot.send_message(message.chat.id, "Название ОС для удаления", reply_markup=keyboard)
-    bot.register_next_step_handler(message, delete_os)
+    button = telebot.types.KeyboardButton(text="Отмена")
+    keyboard.add(button)
+    bot.send_message(message.chat.id, "Выберите тип сервисов", reply_markup=keyboard)
+    bot.register_next_step_handler(message, service_type_delete)
 
 
-def delete_os(message):
-    if message.text[0] == '/':
-        bot.send_message(message.from_user.id, "Удаление сервиса отменено")
-    with open("os_service_list.txt", 'r') as os_service_list_file:
-        services = os_service_list_file.readlines()
-    for i in range(len(services)):
-        if services[i] == message.text or services[i] == f"{message.text}\n":
-            services.pop(i)
-            if i != 0:
-                services[i-1] = services[i-1].replace('\n', '')
-            break
-    with open("os_service_list.txt", 'w') as os_service_list_file:
-        os_service_list_file.writelines(services)
-    bot.send_message(message.from_user.id, "Сервис удален", reply_markup=telebot.types.ReplyKeyboardRemove())
-
-
-@bot.message_handler(commands=['addss'])
-def add_ss_message(message):
-    bot.send_message(message.from_user.id, "Название нового СС")
-    bot.register_next_step_handler(message, add_ss)
-
-
-def add_ss(message):
-    if message.text[0] == '/':
-        bot.send_message(message.from_user.id, "Добавление сервиса отменено")
-    with open("ss_service_list.txt", 'a') as os_service_list:
-        os_service_list.write(f"\n{message.text}")
-    bot.send_message(message.from_user.id, "Сервис добавлен")
-
-
-@bot.message_handler(commands=['deletess'])
-def delete_ss_message(message):
+def service_type_delete(message):
+    if message.text == "Отмена":
+        bot.send_message(message.from_user.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        return 0
+    else:
+        service_file = f'{message.text}_service_list.txt'
+        bot.send_message(message.from_user.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
     keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    services_list = get_list_of_service(filename='ss_service_list.txt')
+    services_list = get_list(filename=service_file)
     for service in services_list:
         button = telebot.types.KeyboardButton(text=service)
         keyboard.add(button)
-    bot.send_message(message.chat.id, "Название СС для удаления", reply_markup=keyboard)
-    bot.register_next_step_handler(message, delete_ss)
+    button = telebot.types.KeyboardButton(text="Отмена")
+    keyboard.add(button)
+    bot.send_message(message.chat.id, "Выберите сервис для удаления", reply_markup=keyboard)
+    bot.register_next_step_handler(message, delete_os, service_file=service_file)
 
 
-def delete_ss(message):
-    if message.text[0] == '/':
-        bot.send_message(message.from_user.id, "Удаление сервиса отменено")
-    with open("ss_service_list.txt", 'r') as os_service_list_file:
+def delete_os(message, service_file):
+    if message.text == "Отмена":
+        bot.send_message(message.from_user.id, "Удаление сервиса отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        return 0
+    with open(service_file, 'r') as os_service_list_file:
         services = os_service_list_file.readlines()
     for i in range(len(services)):
         if services[i] == message.text or services[i] == f"{message.text}\n":
@@ -237,7 +260,7 @@ def delete_ss(message):
             if i != 0:
                 services[i-1] = services[i-1].replace('\n', '')
             break
-    with open("ss_service_list.txt", 'w') as os_service_list_file:
+    with open(service_file, 'w') as os_service_list_file:
         os_service_list_file.writelines(services)
     bot.send_message(message.from_user.id, "Сервис удален", reply_markup=telebot.types.ReplyKeyboardRemove())
 
@@ -262,8 +285,3 @@ def query_handler(call):
 
 
 bot.infinity_polling()
-# bot.stop_bot()
-# {'text': '✅', 'callback_data': '1498_status'}
-# {'text': '❌', 'callback_data': '1512_status'}
-# inline_keyboard[0][0]['text']
-# inline_keyboard[0][1]['text']
