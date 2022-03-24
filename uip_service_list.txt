@@ -1,0 +1,5 @@
+1369_3 Messaging Шина
+1369_2 MSA Микросервис
+1369_1 ServiceMesh Сервис меш
+Аrtemis
+СФП
