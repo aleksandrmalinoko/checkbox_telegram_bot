@@ -5,6 +5,8 @@ import os.path
 from time import sleep
 import pathlib
 import configparser
+import yaml
+
 
 # автоматизированная проверка
 # def pull_from_repo(repo_path):
@@ -43,6 +45,8 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 telegram_api_token = config['telegram']['telegram_api_token']
 bot = telebot.TeleBot(token=telegram_api_token)
+with open("config_data.yaml", 'r') as stream:
+    config_data = yaml.safe_load(stream)
 
 
 def build_menu(buttons,
@@ -55,11 +59,6 @@ def build_menu(buttons,
     if footer_buttons:
         menu.append(footer_buttons)
     return menu
-
-
-def get_list(filename):
-    with open(filename, 'r') as service_list:
-        return service_list.read().split('\n')
 
 
 def generate_button_list(list_of_names: list, ok_text="Успешно", fail_text="Ошибки", cat_name=False):
@@ -135,7 +134,7 @@ def start_message(message):
 @bot.message_handler(commands=['status'])
 def status_message(message):
     keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    service_types = get_list(filename='service_types.txt')
+    service_types = config_data['platform'].keys()
     for type_service in service_types:
         button = telebot.types.KeyboardButton(text=type_service)
         keyboard.add(button)
@@ -150,9 +149,8 @@ def service_type_status(message):
         bot.send_message(message.chat.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
         return 0
     else:
-        service_file = f'{message.text}_service_list.txt'
         bot.send_message(message.chat.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
-    button_list = generate_button_list(get_list(filename=service_file))
+    button_list = generate_button_list(config_data['platform'][message.text]['services'])
     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=3))
     bot.send_message(message.chat.id, "Статус сервисов", reply_markup=reply_markup)
 
@@ -160,7 +158,7 @@ def service_type_status(message):
 @bot.message_handler(commands=['list'])
 def list_message(message):
     keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    service_types = get_list(filename='service_types.txt')
+    service_types = config_data['platform'].keys()
     for type_service in service_types:
         button = telebot.types.KeyboardButton(text=type_service)
         keyboard.add(button)
@@ -175,9 +173,8 @@ def service_type_list(message):
         bot.send_message(message.chat.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
         return 0
     else:
-        service_file = f'{message.text}_service_list.txt'
         bot.send_message(message.chat.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
-    services_list = get_list(filename=service_file)
+    services_list = config_data['platform'][message.text]['services']
     str_service_list = '\n'.join(services_list)
     bot.send_message(message.chat.id, str_service_list)
 
@@ -185,7 +182,7 @@ def service_type_list(message):
 # @bot.message_handler(commands=['addservice'])
 # def add_service_message(message):
 #     keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-#     service_types = get_list(filename='service_types.txt')
+#     service_types = config_data['platform'].keys()
 #     for type_service in service_types:
 #         button = telebot.types.KeyboardButton(text=type_service)
 #         keyboard.add(button)
@@ -221,7 +218,7 @@ def service_type_list(message):
 # @bot.message_handler(commands=['deleteservice'])
 # def delete_os_message(message):
 #     keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-#     service_types = get_list(filename='service_types.txt')
+#     service_types = config_data['platform'].keys()
 #     for type_service in service_types:
 #         button = telebot.types.KeyboardButton(text=type_service)
 #         keyboard.add(button)
@@ -269,7 +266,7 @@ def service_type_list(message):
 @bot.message_handler(commands=['survey'])
 def survey_message(message):
     keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    service_types = get_list(filename='service_types.txt')
+    service_types = config_data['platform'].keys()
     for type_service in service_types:
         button = telebot.types.KeyboardButton(text=type_service)
         keyboard.add(button)
@@ -284,9 +281,8 @@ def team_type_survey(message):
         bot.send_message(message.chat.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
         return 0
     else:
-        service_file = f'{message.text}_users.txt'
         bot.send_message(message.chat.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
-    button_list = generate_button_list(get_list(filename=service_file), ok_text="Да", fail_text="Нет", cat_name=True)
+    button_list = generate_button_list(config_data['platform'][message.text]['users'], ok_text="Да", fail_text="Нет", cat_name=True)
     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=3))
     bot.send_message(message.chat.id, "Опрос", reply_markup=reply_markup)
 
