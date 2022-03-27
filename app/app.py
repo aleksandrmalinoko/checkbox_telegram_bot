@@ -46,7 +46,7 @@ config = configparser.ConfigParser()
 config.read('config.ini')
 telegram_api_token = config['telegram']['telegram_api_token']
 bot = telebot.TeleBot(token=telegram_api_token)
-with open("data/config_data.yaml", 'r') as stream:
+with open("config_data.yaml", 'r') as stream:
     config_data = yaml.safe_load(stream)
 
 
@@ -208,10 +208,11 @@ def service_type_add(message):
 
 def add_os(message, service_type):
     if message.text == "Отмена":
-        bot.send_message(message.chat.id, "Добавление сервиса отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Добавление сервиса отменено",
+                         reply_markup=telebot.types.ReplyKeyboardRemove())
         return 0
     config_data['platform'][service_type]['services'].append(message.text)
-    with io.open('data/config_data.yaml', 'w', encoding='utf8') as outfile:
+    with io.open('config_data.yaml', 'w', encoding='utf8') as outfile:
         yaml.dump(config_data, outfile, default_flow_style=False, allow_unicode=True)
     bot.send_message(message.chat.id, "Сервис добавлен", reply_markup=telebot.types.ReplyKeyboardRemove())
 
@@ -251,7 +252,7 @@ def delete_os(message, service_type):
         bot.send_message(message.chat.id, "Удаление сервиса отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
         return 0
     config_data['platform'][service_type]['services'].remove(message.text)
-    with io.open('data/config_data.yaml', 'w', encoding='utf8') as outfile:
+    with io.open('config_data.yaml', 'w', encoding='utf8') as outfile:
         yaml.dump(config_data, outfile, default_flow_style=False, allow_unicode=True)
     bot.send_message(message.chat.id, "Сервис удален", reply_markup=telebot.types.ReplyKeyboardRemove())
 
