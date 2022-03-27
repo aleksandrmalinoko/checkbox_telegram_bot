@@ -1,46 +1,8 @@
 import telebot
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
-# from git import Repo
-# import os.path
-# from time import sleep
-# import pathlib
 import configparser
 import yaml
 import io
-
-
-# автоматизированная проверка
-# def pull_from_repo(repo_path):
-#     repo = Repo(repo_path)
-#     origin = repo.remote('origin')
-#     origin.pull()
-#
-#
-# def push_to_repo(repo_path, message):
-#     repo = Repo(repo_path)
-#     repo.git.add(all=True)
-#     repo.index.commit(message)
-#     origin = repo.remote('origin')
-#     origin.push()
-#
-#
-# @bot.message_handler(commands=['1570status_do_not_use'])
-# def status_1570_message(message):
-#     with open('testcheck/1570_init_check.txt', 'w') as request_file:
-#         request_file.write("init check")
-#     push_to_repo('testcheck', 'init check 1570')
-#     while True:
-#         pull_from_repo('testcheck/')
-#         if '1570_check_result.txt' in os.listdir('testcheck'):
-#             with open('testcheck/1570_check_result.txt', 'r') as answer_file:
-#                 report = answer_file.read()
-#             file_to_rem = pathlib.Path("testcheck/1570_check_result.txt")
-#             file_to_rem.unlink()
-#             push_to_repo('testcheck', 'response 1570 check result')
-#             break
-#         else:
-#             sleep(5)
-#     bot.send_message(message.chat.id, str(report))
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -276,7 +238,8 @@ def team_type_survey(message):
         return 0
     else:
         bot.send_message(message.chat.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
-    button_list = generate_button_list(config_data['platform'][message.text]['users'], ok_text="Да", fail_text="Нет", cat_name=True)
+    button_list = generate_button_list(config_data['platform'][message.text]['users'], ok_text="Да", fail_text="Нет",
+                                       cat_name=True)
     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=3))
     bot.send_message(message.chat.id, "Опрос", reply_markup=reply_markup)
 
