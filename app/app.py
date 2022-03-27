@@ -1,25 +1,27 @@
 import base64
 
-import telebot
-from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
-import configparser
+from telebot import TeleBot
+from telebot.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardRemove
+)
+from configparser import ConfigParser
 import yaml
-import io
 
-parser = configparser.ConfigParser()
+parser = ConfigParser()
 parser.read('config.ini')
 telegram_api_token = parser['telegram']['telegram_api_token']
 token_bytes: bytes = base64.b64decode(telegram_api_token.encode('ascii'))
 token: str = token_bytes.decode('ascii')
-bot = telebot.TeleBot(token=token)
+bot = TeleBot(token=token)
 with open("config_data.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
 
 
-def build_menu(buttons,
-               n_cols,
-               header_buttons='',
-               footer_buttons=''):
+def build_menu(buttons, n_cols, header_buttons='', footer_buttons=''):
     menu = [buttons[item:item + n_cols] for item in range(0, len(buttons), n_cols)]
     if header_buttons:
         menu.insert(0, header_buttons)
@@ -100,12 +102,12 @@ def start_message(message):
 
 @bot.message_handler(commands=['status'])
 def status_message(message):
-    keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
-        button = telebot.types.KeyboardButton(text=type_service)
+        button = KeyboardButton(text=type_service)
         keyboard.add(button)
-    button = telebot.types.KeyboardButton(text="Отмена")
+    button = KeyboardButton(text="Отмена")
     keyboard.add(button)
     bot.send_message(message.chat.id, "Выберите тип сервисов", reply_markup=keyboard)
     bot.register_next_step_handler(message, service_type_status)
@@ -113,9 +115,9 @@ def status_message(message):
 
 def service_type_status(message):
     if message.text == "Отмена":
-        bot.send_message(message.chat.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
-    bot.send_message(message.chat.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
+    bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
     buttons: list = generate_buttons(config['platform'][message.text]['services'])
     reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=3))
     bot.send_message(message.chat.id, "Статус сервисов", reply_markup=reply_markup)
@@ -123,12 +125,12 @@ def service_type_status(message):
 
 @bot.message_handler(commands=['list'])
 def list_message(message):
-    keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
-        button = telebot.types.KeyboardButton(text=type_service)
+        button = KeyboardButton(text=type_service)
         keyboard.add(button)
-    button = telebot.types.KeyboardButton(text="Отмена")
+    button = KeyboardButton(text="Отмена")
     keyboard.add(button)
     bot.send_message(message.chat.id, "Выберите тип сервисов", reply_markup=keyboard)
     bot.register_next_step_handler(message, service_type_list)
@@ -136,9 +138,9 @@ def list_message(message):
 
 def service_type_list(message):
     if message.text == "Отмена":
-        bot.send_message(message.chat.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
-    bot.send_message(message.chat.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
+    bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
     services_list = config['platform'][message.text]['services']
     str_service_list = '\n'.join(services_list)
     bot.send_message(message.chat.id, str_service_list)
@@ -146,12 +148,12 @@ def service_type_list(message):
 
 @bot.message_handler(commands=['addservice'])
 def add_service_message(message):
-    keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
-        button = telebot.types.KeyboardButton(text=type_service)
+        button = KeyboardButton(text=type_service)
         keyboard.add(button)
-    button = telebot.types.KeyboardButton(text="Отмена")
+    button = KeyboardButton(text="Отмена")
     keyboard.add(button)
     bot.send_message(message.chat.id, "Выберите тип сервисов", reply_markup=keyboard)
     bot.register_next_step_handler(message, service_type_add)
@@ -159,11 +161,11 @@ def add_service_message(message):
 
 def service_type_add(message):
     if message.text == "Отмена":
-        bot.send_message(message.chat.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
-    bot.send_message(message.chat.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
-    keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-    button = telebot.types.KeyboardButton(text="Отмена")
+    bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    button = KeyboardButton(text="Отмена")
     keyboard.add(button)
     bot.send_message(message.chat.id, "Название нового сервиса", reply_markup=keyboard)
     bot.register_next_step_handler(message, add_os, service_type=message.text)
@@ -173,23 +175,23 @@ def add_os(message, service_type):
     if message.text == "Отмена":
         bot.send_message(
             message.chat.id, "Добавление сервиса отменено",
-            reply_markup=telebot.types.ReplyKeyboardRemove()
+            reply_markup=ReplyKeyboardRemove()
         )
         return 0
     config['platform'][service_type]['services'].append(message.text)
-    with io.open('config_data.yaml', 'w', encoding='utf8') as outfile:
+    with open('config_data.yaml', 'w', encoding='utf8') as outfile:
         yaml.dump(config, outfile, default_flow_style=False, allow_unicode=True)
-    bot.send_message(message.chat.id, "Сервис добавлен", reply_markup=telebot.types.ReplyKeyboardRemove())
+    bot.send_message(message.chat.id, "Сервис добавлен", reply_markup=ReplyKeyboardRemove())
 
 
 @bot.message_handler(commands=['deleteservice'])
 def delete_os_message(message):
-    keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
-        button = telebot.types.KeyboardButton(text=type_service)
+        button = KeyboardButton(text=type_service)
         keyboard.add(button)
-    button = telebot.types.KeyboardButton(text="Отмена")
+    button = KeyboardButton(text="Отмена")
     keyboard.add(button)
     bot.send_message(message.chat.id, "Выберите тип сервисов", reply_markup=keyboard)
     bot.register_next_step_handler(message, service_type_delete)
@@ -197,15 +199,15 @@ def delete_os_message(message):
 
 def service_type_delete(message):
     if message.text == "Отмена":
-        bot.send_message(message.chat.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
-    bot.send_message(message.chat.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
-    keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     services_list = config['platform'][message.text]['services']
     for service in services_list:
-        button = telebot.types.KeyboardButton(text=service)
+        button = KeyboardButton(text=service)
         keyboard.add(button)
-    button = telebot.types.KeyboardButton(text="Отмена")
+    button = KeyboardButton(text="Отмена")
     keyboard.add(button)
     bot.send_message(message.chat.id, "Выберите сервис для удаления", reply_markup=keyboard)
     bot.register_next_step_handler(message, delete_os, service_type=message.text)
@@ -213,22 +215,22 @@ def service_type_delete(message):
 
 def delete_os(message, service_type):
     if message.text == "Отмена":
-        bot.send_message(message.chat.id, "Удаление сервиса отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Удаление сервиса отменено", reply_markup=ReplyKeyboardRemove())
         return 0
     config['platform'][service_type]['services'].remove(message.text)
-    with io.open('config_data.yaml', 'w', encoding='utf8') as outfile:
+    with open('config_data.yaml', 'w', encoding='utf8') as outfile:
         yaml.dump(config, outfile, default_flow_style=False, allow_unicode=True)
-    bot.send_message(message.chat.id, "Сервис удален", reply_markup=telebot.types.ReplyKeyboardRemove())
+    bot.send_message(message.chat.id, "Сервис удален", reply_markup=ReplyKeyboardRemove())
 
 
 @bot.message_handler(commands=['survey'])
 def survey_message(message):
-    keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
-        button = telebot.types.KeyboardButton(text=type_service)
+        button = KeyboardButton(text=type_service)
         keyboard.add(button)
-    button = telebot.types.KeyboardButton(text="Отмена")
+    button = KeyboardButton(text="Отмена")
     keyboard.add(button)
     bot.send_message(message.chat.id, "Выберите команду", reply_markup=keyboard)
     bot.register_next_step_handler(message, team_type_survey)
@@ -236,9 +238,9 @@ def survey_message(message):
 
 def team_type_survey(message):
     if message.text == "Отмена":
-        bot.send_message(message.chat.id, "Отменено", reply_markup=telebot.types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
-    bot.send_message(message.chat.id, "Тип выбран", reply_markup=telebot.types.ReplyKeyboardRemove())
+    bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
     button_list = generate_buttons(config['platform'][message.text]['users'], ok_text="Да", fail_text="Нет")
     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=3))
     bot.send_message(message.chat.id, "Опрос", reply_markup=reply_markup)
