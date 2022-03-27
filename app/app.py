@@ -1,6 +1,6 @@
 import base64
 
-from telebot import TeleBot
+import telebot
 from telebot.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -16,7 +16,7 @@ parser.read('config.ini')
 telegram_api_token = parser['telegram']['telegram_api_token']
 token_bytes: bytes = base64.b64decode(telegram_api_token.encode('ascii'))
 token: str = token_bytes.decode('ascii')
-bot = TeleBot(token=token)
+bot = telebot.TeleBot(token=token)
 with open("config_data.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
 
