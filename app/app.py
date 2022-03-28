@@ -15,9 +15,7 @@ import yaml
 parser = ConfigParser()
 parser.read(Path('init.ini').absolute())
 telegram_api_token = parser['telegram']['telegram_api_token']
-token_bytes: bytes = base64.b64decode(telegram_api_token.encode('ascii'))
-token: str = token_bytes.decode('ascii')
-bot = telebot.TeleBot(token=token)
+bot = telebot.TeleBot(token=telegram_api_token)
 path: Path = Path(f"{Path.cwd()}/config.yaml").absolute()
 with open(path, 'r') as stream:
     config = yaml.safe_load(stream)
