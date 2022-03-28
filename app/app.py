@@ -13,7 +13,7 @@ from configparser import ConfigParser
 import yaml
 
 parser = ConfigParser()
-parser.read('config.ini')
+parser.read(Path('init.ini').absolute())
 telegram_api_token = parser['telegram']['telegram_api_token']
 token_bytes: bytes = base64.b64decode(telegram_api_token.encode('ascii'))
 token: str = token_bytes.decode('ascii')
