@@ -1,4 +1,5 @@
 import base64
+from pathlib import Path
 
 import telebot
 from telebot.types import (
@@ -17,7 +18,8 @@ telegram_api_token = parser['telegram']['telegram_api_token']
 token_bytes: bytes = base64.b64decode(telegram_api_token.encode('ascii'))
 token: str = token_bytes.decode('ascii')
 bot = telebot.TeleBot(token=token)
-with open("config_data.yaml", 'r') as stream:
+path: Path = Path(f"data/config_data.yaml").absolute()
+with open(path, 'r') as stream:
     config = yaml.safe_load(stream)
 
 
@@ -179,7 +181,7 @@ def add_os(message, service_type):
         )
         return 0
     config['platform'][service_type]['services'].append(message.text)
-    with open('config_data.yaml', 'w', encoding='utf8') as outfile:
+    with open(path, 'w', encoding='utf8') as outfile:
         yaml.dump(config, outfile, default_flow_style=False, allow_unicode=True)
     bot.send_message(message.chat.id, "Сервис добавлен", reply_markup=ReplyKeyboardRemove())
 
@@ -218,7 +220,7 @@ def delete_os(message, service_type):
         bot.send_message(message.chat.id, "Удаление сервиса отменено", reply_markup=ReplyKeyboardRemove())
         return 0
     config['platform'][service_type]['services'].remove(message.text)
-    with open('config_data.yaml', 'w', encoding='utf8') as outfile:
+    with open(path, 'w', encoding='utf8') as outfile:
         yaml.dump(config, outfile, default_flow_style=False, allow_unicode=True)
     bot.send_message(message.chat.id, "Сервис удален", reply_markup=ReplyKeyboardRemove())
 
