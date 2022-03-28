@@ -2,5 +2,8 @@ version: "3.9"
 services:
   app:
     build: .
-  volumes:
-    - config_data.yaml:/data/config_data.yaml
+    volumes:
+      - config:/data/config
+
+volumes:
+  config:
