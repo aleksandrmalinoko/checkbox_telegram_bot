@@ -3,7 +3,6 @@ services:
   app:
     build: .
     volumes:
-      - config:/data/config
-
-volumes:
-  config:
+      - type: bind
+        source: ./config.yaml
+        target: /OS_check_list/config.yaml

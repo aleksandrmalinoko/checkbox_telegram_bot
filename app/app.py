@@ -18,7 +18,7 @@ telegram_api_token = parser['telegram']['telegram_api_token']
 token_bytes: bytes = base64.b64decode(telegram_api_token.encode('ascii'))
 token: str = token_bytes.decode('ascii')
 bot = telebot.TeleBot(token=token)
-path: Path = Path(f"/config/config.yaml").absolute()
+path: Path = Path(f"{Path.cwd()}/config.yaml").absolute()
 with open(path, 'r') as stream:
     config = yaml.safe_load(stream)
 
