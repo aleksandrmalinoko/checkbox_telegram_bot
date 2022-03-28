@@ -8,3 +8,4 @@ services:
       - type: bind
         source: ./config.yaml
         target: /OS_check_list/config.yaml
+    network_mode: "host"
