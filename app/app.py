@@ -108,7 +108,7 @@ def status_message(message):
         keyboard.add(button)
     button = KeyboardButton(text="Отмена")
     keyboard.add(button)
-    bot.send_message(message.chat.id, "Выберите тип сервисов:", reply_markup=keyboard)
+    bot.send_message(message.chat.id, "Выберите тип сервисов", reply_markup=keyboard)
     bot.register_next_step_handler(message, service_type_status)
 
 
