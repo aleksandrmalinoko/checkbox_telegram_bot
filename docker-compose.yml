@@ -6,6 +6,6 @@ services:
       replicas: 1
     volumes:
       - type: bind
-        source: ./config.yaml
+        source: /home/ubuntu/bots_config/config.yaml
         target: /OS_check_list/config.yaml
     network_mode: "host"
