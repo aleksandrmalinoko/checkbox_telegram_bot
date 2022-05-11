@@ -117,6 +117,7 @@ def service_type_status(message):
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
+    bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
     buttons: list = generate_buttons(config['platform'][message.text]['services'])
     reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=3))
     bot.send_message(message.chat.id, "Статус сервисов", reply_markup=reply_markup)
@@ -140,6 +141,7 @@ def service_type_list(message):
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
+    bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
     services_list = config['platform'][message.text]['services']
     str_service_list = '\n'.join(services_list)
     bot.send_message(message.chat.id, str_service_list)
@@ -283,6 +285,7 @@ def service_type_add(message):
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
+    bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     button = KeyboardButton(text="Отмена")
     keyboard.add(button)
@@ -320,6 +323,7 @@ def service_type_delete(message):
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
+    bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     services_list = config['platform'][message.text]['services']
     for service in services_list:
@@ -358,6 +362,7 @@ def team_type_survey(message):
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
+    bot.send_message(message.chat.id, "Команда выбрана", reply_markup=ReplyKeyboardRemove())
     button_list = generate_buttons(config['platform'][message.text]['users'], ok_text="Да", fail_text="Нет")
     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=3))
     bot.send_message(message.chat.id, "Опрос", reply_markup=reply_markup)
