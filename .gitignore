@@ -8,6 +8,7 @@
 .AppleDouble
 .LSOverride
 app/init.ini
+app/config.yaml
 # Icon must end with two \r
 Icon
 
