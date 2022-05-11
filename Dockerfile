@@ -21,4 +21,4 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 COPY app .
 
-CMD ["python", "app.py"]
+CMD ["python", "-u", "app.py"]
