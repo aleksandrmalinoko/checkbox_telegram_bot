@@ -59,9 +59,9 @@ def generate_report(inline_keyboard):
     inline_keyboard = inline_keyboard[:-1]
     for item in inline_keyboard:
         if item[2]['text'] == "Отмена":
-            report += f"{item[0]['text']} {item[1]['text']}\n"
+            report += f"{item[0]['text']} -> {item[1]['text']}\n"
         else:
-            report += f"{item[0]['text']} - ?\n"
+            report += f"{item[0]['text']} -> ?\n"
     return report
 
 
@@ -326,7 +326,46 @@ def query_handler(call):
 def query_handler(call):
     bot.answer_callback_query(callback_query_id=call.id, text='')
     report_message = generate_report(call.message.json['reply_markup']['inline_keyboard'])
-    bot.send_message(chat_id=call.message.chat.id, text=report_message)
+    # bot.send_message(chat_id=call.message.chat.id, text=report_message)
+    buttons = [InlineKeyboardButton("Изменить", callback_data=f"change"), ]
+    reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=3))
+    bot.edit_message_text(
+        text=report_message,
+        chat_id=call.message.chat.id,
+        message_id=call.message.id,
+        reply_markup=reply_markup
+    )
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('change'))
+def query_handler(call):
+    bot.answer_callback_query(callback_query_id=call.id, text='изменить')
+    buttons: list = []
+    idx = 0
+    names = call.message.text.split('\n')
+    for item in names:
+        idx += 1
+        name, status = item.split('->')
+        name = name.rstrip()
+        buttons.append(InlineKeyboardButton(name, callback_data=idx))
+        status = status.lstrip()
+        if status == "?":
+            buttons.append(InlineKeyboardButton("Успешно", callback_data=f"{idx}_ok"))
+            buttons.append(InlineKeyboardButton("Ошибки", callback_data=f"{idx}_fail"))
+        elif status == '✅':
+            buttons.append(InlineKeyboardButton("✅", callback_data=f"{idx}_status"))
+            buttons.append(InlineKeyboardButton("Отмена", callback_data=f"{idx}_otm"))
+        elif status == '❌':
+            buttons.append(InlineKeyboardButton("❌", callback_data=f"{idx}_status"))
+            buttons.append(InlineKeyboardButton("Отмена", callback_data=f"{idx}_otm"))
+    buttons.append(InlineKeyboardButton("Сгенерировать отчет", callback_data=f"generate_report"))
+    reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=3))
+    bot.edit_message_text(
+        text="Статус сервисов",
+        chat_id=call.message.chat.id,
+        message_id=call.message.id,
+        reply_markup=reply_markup
+    )
 
 
 bot.infinity_polling()
