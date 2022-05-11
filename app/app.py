@@ -124,6 +124,7 @@ def service_type_status(message):
 
 @bot.message_handler(commands=['list'])
 def list_message(message):
+    print(message.chat.id)
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
