@@ -1,5 +1,5 @@
 from pathlib import Path
-
+import re
 import telebot
 from telebot.types import (
     InlineKeyboardButton,
@@ -59,9 +59,9 @@ def generate_report(inline_keyboard):
     inline_keyboard = inline_keyboard[:-1]
     for item in inline_keyboard:
         if item[2]['text'] == "Отмена":
-            report += f"{item[0]['text']} {item[1]['text']}\n"
+            report += f"{item[0]['text']} -> {item[1]['text']}\n"
         else:
-            report += f"{item[0]['text']} - ?\n"
+            report += f"{item[0]['text']} -> ?\n"
     return report
 
 
@@ -159,27 +159,112 @@ def zni_number(message):
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
-    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
+    regex_num = re.compile('\d{8}')
+    number_zni = regex_num.findall(message.text)
+    if number_zni:
+        number_zni = f"C-{number_zni[0]}"
+    else:
+        bot.send_message(message.chat.id, "Номер не соответствует формату (C-XXXXXXXX), повторите попытку")
+        bot.register_next_step_handler(message, zni_number)
+        return 0
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
-        services_list = config['platform'][type_service]['services']
-        for service_name in services_list:
-            button = KeyboardButton(text=service_name)
-            keyboard.add(button)
+        button = KeyboardButton(text=type_service)
+        keyboard.add(button)
+    button = KeyboardButton(text="Отмена")
+    keyboard.add(button)
+    bot.send_message(message.chat.id, "Выберите тип сервисов", reply_markup=keyboard)
+    bot.register_next_step_handler(
+        message,
+        zni_platform,
+        number_zni=number_zni
+    )
+
+
+def zni_platform(message, number_zni):
+    if message.text == "Отмена":
+        bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
+        return 0
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
+    services_list = config['platform'][message.text]['services']
+    for service_name in services_list:
+        button = KeyboardButton(text=service_name)
+        keyboard.add(button)
     button = KeyboardButton(text="Отмена")
     keyboard.add(button)
     bot.send_message(message.chat.id, "Выберите сервис", reply_markup=keyboard)
-    bot.register_next_step_handler(message, zni_system, number_zni=message.text)
+    bot.register_next_step_handler(
+        message,
+        zni_system,
+        number_zni=number_zni,
+        platform_zni=message.text
+    )
 
 
-def zni_system(message, number_zni):
-    formatted_string = f"Начало работ по ЗНИ {number_zni}\nСервис:{message.text}"
+def zni_system(message, number_zni, platform_zni):
+    if message.text == "Отмена":
+        bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
+        return 0
+    keyboard = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True)
+    button = KeyboardButton(text="Да")
+    keyboard.add(button)
+    button = KeyboardButton(text="Нет")
+    keyboard.add(button)
+    button = KeyboardButton(text="Отмена")
+    keyboard.add(button)
+    bot.send_message(message.chat.id, "Оказывается ли влияние на мониторинг?", reply_markup=keyboard)
+    bot.register_next_step_handler(
+        message,
+        zni_monitoring_influence,
+        number_zni=number_zni,
+        platform_zni=platform_zni,
+        system_zni=message.text
+    )
+
+
+def zni_monitoring_influence(message, number_zni, platform_zni, system_zni):
+    if message.text == "Отмена":
+        bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
+        return 0
+    keyboard = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True)
+    button = KeyboardButton(text="Да")
+    keyboard.add(button)
+    button = KeyboardButton(text="Нет")
+    keyboard.add(button)
+    button = KeyboardButton(text="Отмена")
+    keyboard.add(button)
+    bot.send_message(message.chat.id, "Оказывается ли влияние на потребителей?", reply_markup=keyboard)
+    bot.register_next_step_handler(
+        message,
+        zni_consumer_influence,
+        number_zni=number_zni,
+        platform_zni=platform_zni,
+        system_zni=system_zni,
+        monitoring_influence_zni=message.text
+    )
+
+
+def zni_consumer_influence(message, number_zni, platform_zni, system_zni, monitoring_influence_zni):
+    if message.text == "Отмена":
+        bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
+        return 0
+    formatted_string = f"{platform_zni}\n" \
+                       f"Начало работ по ЗНИ {number_zni}\n" \
+                       f"Сервис: {system_zni}\n" \
+                       f"Влияние на мониторинг: {monitoring_influence_zni}\n" \
+                       f"Влияние на потребителей: {message.text}\n" \
+                       f"Ответственный: {message.chat.first_name} {message.chat.last_name} @{message.chat.username}"
     msg = bot.send_message(omni_chat_id, formatted_string, reply_markup=ReplyKeyboardRemove())
     omni_msg_id = msg.id
-    buttons: list = [InlineKeyboardButton("Завершить работы", callback_data=f"zni_{omni_msg_id}_ok"),
-                     InlineKeyboardButton("Зарегистрировать аварию", callback_data=f"zni_{omni_msg_id}_fail")]
+    buttons: list = [InlineKeyboardButton("Завершить работы", callback_data=f"ok_{omni_msg_id}_zni"),
+                     InlineKeyboardButton("Завершить с ошибкой", callback_data=f"fail_{omni_msg_id}_zni")]
     keyboard = InlineKeyboardMarkup(build_menu(buttons, n_cols=2))
-    bot.send_message(message.chat.id, "Сообщение в чат Поддержка Omni отправлено", reply_markup=keyboard)
+    bot.send_message(
+        message.chat.id,
+        f"Сообщение отправлено в чат 'Поддержка Omni':\n{formatted_string}",
+        reply_markup=keyboard,
+    )
 
 
 @bot.message_handler(commands=['addservice'])
@@ -282,7 +367,7 @@ def team_type_survey(message):
     bot.send_message(message.chat.id, "Опрос", reply_markup=reply_markup)
 
 
-@bot.callback_query_handler(func=lambda call: not call.data.startswith('generate_report') and not call.data.startswith('zni'))
+@bot.callback_query_handler(func=lambda call: call.data.endswith('ok') or call.data.endswith('fail'))
 def query_handler(call):
     bot.answer_callback_query(callback_query_id=call.id, text='')
     if call.message.html_text == "Статус сервисов":
@@ -306,16 +391,16 @@ def query_handler(call):
     )
 
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('zni'))
+@bot.callback_query_handler(func=lambda call: call.data.endswith('zni'))
 def query_handler(call):
     bot.answer_callback_query(callback_query_id=call.id, text='')
-    _, msg_id, zni_status = call.data.split('_')
+    zni_status, msg_id, _ = call.data.split('_')
     if zni_status == "ok":
-        bot.send_message(omni_chat_id, "Работы завершены", reply_to_message_id=msg_id)
+        bot.send_message(omni_chat_id, "Работы завершены успешно", reply_to_message_id=msg_id)
     else:
         bot.send_message(omni_chat_id, "Работы завершены с ошибками", reply_to_message_id=msg_id)
     bot.edit_message_text(
-        text="Работы завершены. Не забудьте закрыть ЗНИ!",
+        text="Работы завершены. Не забудьте закрыть ЗНИ.",
         chat_id=call.message.chat.id,
         message_id=call.message.id,
         reply_markup=InlineKeyboardMarkup([])
@@ -326,7 +411,45 @@ def query_handler(call):
 def query_handler(call):
     bot.answer_callback_query(callback_query_id=call.id, text='')
     report_message = generate_report(call.message.json['reply_markup']['inline_keyboard'])
-    bot.send_message(chat_id=call.message.chat.id, text=report_message)
+    buttons = [InlineKeyboardButton("Изменить", callback_data=f"change"), ]
+    reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=3))
+    bot.edit_message_text(
+        text=report_message,
+        chat_id=call.message.chat.id,
+        message_id=call.message.id,
+        reply_markup=reply_markup
+    )
+
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('change'))
+def query_handler(call):
+    bot.answer_callback_query(callback_query_id=call.id, text='изменить')
+    buttons: list = []
+    idx = 0
+    names = call.message.text.split('\n')
+    for item in names:
+        idx += 1
+        name, status = item.split('->')
+        name = name.rstrip()
+        buttons.append(InlineKeyboardButton(name, callback_data=idx))
+        status = status.lstrip()
+        if status == "?":
+            buttons.append(InlineKeyboardButton("Успешно", callback_data=f"{idx}_ok"))
+            buttons.append(InlineKeyboardButton("Ошибки", callback_data=f"{idx}_fail"))
+        elif status == '✅':
+            buttons.append(InlineKeyboardButton("✅", callback_data=f"{idx}_status"))
+            buttons.append(InlineKeyboardButton("Отмена", callback_data=f"{idx}_otm"))
+        elif status == '❌':
+            buttons.append(InlineKeyboardButton("❌", callback_data=f"{idx}_status"))
+            buttons.append(InlineKeyboardButton("Отмена", callback_data=f"{idx}_otm"))
+    buttons.append(InlineKeyboardButton("Сгенерировать отчет", callback_data=f"generate_report"))
+    reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=3))
+    bot.edit_message_text(
+        text="Статус сервисов",
+        chat_id=call.message.chat.id,
+        message_id=call.message.id,
+        reply_markup=reply_markup
+    )
 
 
 bot.infinity_polling()
