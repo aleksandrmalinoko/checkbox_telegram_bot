@@ -102,7 +102,7 @@ def start_message(message):
 
 @bot.message_handler(commands=['status'])
 def status_message(message):
-    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
         button = KeyboardButton(text=type_service)
@@ -117,7 +117,6 @@ def service_type_status(message):
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
-    bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
     buttons: list = generate_buttons(config['platform'][message.text]['services'])
     reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=3))
     bot.send_message(message.chat.id, "Статус сервисов", reply_markup=reply_markup)
@@ -125,7 +124,7 @@ def service_type_status(message):
 
 @bot.message_handler(commands=['list'])
 def list_message(message):
-    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
         button = KeyboardButton(text=type_service)
@@ -140,7 +139,6 @@ def service_type_list(message):
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
-    bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
     services_list = config['platform'][message.text]['services']
     str_service_list = '\n'.join(services_list)
     bot.send_message(message.chat.id, str_service_list)
@@ -269,7 +267,7 @@ def zni_consumer_influence(message, number_zni, platform_zni, system_zni, monito
 
 @bot.message_handler(commands=['addservice'])
 def add_service_message(message):
-    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
         button = KeyboardButton(text=type_service)
@@ -284,7 +282,6 @@ def service_type_add(message):
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
-    bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     button = KeyboardButton(text="Отмена")
     keyboard.add(button)
@@ -307,7 +304,7 @@ def add_os(message, service_type):
 
 @bot.message_handler(commands=['deleteservice'])
 def delete_os_message(message):
-    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
         button = KeyboardButton(text=type_service)
@@ -322,7 +319,6 @@ def service_type_delete(message):
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
-    bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     services_list = config['platform'][message.text]['services']
     for service in services_list:
@@ -346,7 +342,7 @@ def delete_os(message, service_type):
 
 @bot.message_handler(commands=['survey'])
 def survey_message(message):
-    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
         button = KeyboardButton(text=type_service)
@@ -361,7 +357,6 @@ def team_type_survey(message):
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
-    bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
     button_list = generate_buttons(config['platform'][message.text]['users'], ok_text="Да", fail_text="Нет")
     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=3))
     bot.send_message(message.chat.id, "Опрос", reply_markup=reply_markup)
