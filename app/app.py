@@ -114,6 +114,9 @@ def status_message(message):
 
 
 def service_type_status(message):
+    if message.text.startswith("/"):
+        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+        return 0
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -138,6 +141,9 @@ def list_message(message):
 
 
 def service_type_list(message):
+    if message.text.startswith("/"):
+        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+        return 0
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -149,6 +155,9 @@ def service_type_list(message):
 
 @bot.message_handler(commands=['zni'])
 def zni_message(message):
+    if message.chat.type != "private":
+        bot.send_message(message.chat.id, "Используйте данную команду только в личных сообщениях боту")
+        return 0
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     button = KeyboardButton(text="Отмена")
     keyboard.add(button)
@@ -157,6 +166,9 @@ def zni_message(message):
 
 
 def zni_number(message):
+    if message.text.startswith("/"):
+        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+        return 0
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -184,6 +196,9 @@ def zni_number(message):
 
 
 def zni_platform(message, number_zni):
+    if message.text.startswith("/"):
+        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+        return 0
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -204,6 +219,9 @@ def zni_platform(message, number_zni):
 
 
 def zni_system(message, number_zni, platform_zni):
+    if message.text.startswith("/"):
+        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+        return 0
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -225,6 +243,9 @@ def zni_system(message, number_zni, platform_zni):
 
 
 def zni_monitoring_influence(message, number_zni, platform_zni, system_zni):
+    if message.text.startswith("/"):
+        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+        return 0
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -247,14 +268,45 @@ def zni_monitoring_influence(message, number_zni, platform_zni, system_zni):
 
 
 def zni_consumer_influence(message, number_zni, platform_zni, system_zni, monitoring_influence_zni):
+    if message.text.startswith("/"):
+        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+        return 0
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
+    keyboard = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True)
+    button = KeyboardButton(text="Без описания")
+    keyboard.add(button)
+    button = KeyboardButton(text="Отмена")
+    keyboard.add(button)
+    bot.send_message(message.chat.id, "Введите подробное описание работ", reply_markup=keyboard)
+    bot.register_next_step_handler(
+        message,
+        zni_description_of_the_work,
+        number_zni=number_zni,
+        platform_zni=platform_zni,
+        system_zni=system_zni,
+        monitoring_influence_zni=monitoring_influence_zni,
+        consumer_influence_zni=message.text
+    )
+
+
+def zni_description_of_the_work(message, number_zni, platform_zni, system_zni, monitoring_influence_zni, consumer_influence_zni):
+    if message.text.startswith("/"):
+        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+        return 0
+    if message.text == "Отмена":
+        bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
+        return 0
+    if message.text == "Без описания":
+        description_of_the_work = ""
+    else:
+        description_of_the_work = f"Описание работ: {message.text}\n"
     formatted_string = f"{platform_zni}\n" \
                        f"Начало работ по ЗНИ {number_zni}\n" \
-                       f"Сервис: {system_zni}\n" \
+                       f"Сервис: {system_zni}\n{description_of_the_work}"\
                        f"Влияние на мониторинг: {monitoring_influence_zni}\n" \
-                       f"Влияние на потребителей: {message.text}\n" \
+                       f"Влияние на потребителей: {consumer_influence_zni}\n" \
                        f"Ответственный: {message.chat.first_name} {message.chat.last_name} @{message.chat.username}"
     msg = bot.send_message(omni_chat_id, formatted_string, reply_markup=ReplyKeyboardRemove())
     omni_msg_id = msg.id
@@ -263,8 +315,13 @@ def zni_consumer_influence(message, number_zni, platform_zni, system_zni, monito
     keyboard = InlineKeyboardMarkup(build_menu(buttons, n_cols=2))
     bot.send_message(
         message.chat.id,
+        f"Готово",
+        reply_markup=ReplyKeyboardRemove()
+    )
+    bot.send_message(
+        message.chat.id,
         f"Сообщение отправлено в чат 'Поддержка Omni':\n{formatted_string}",
-        reply_markup=keyboard,
+        reply_markup=keyboard
     )
 
 
@@ -282,6 +339,9 @@ def add_service_message(message):
 
 
 def service_type_add(message):
+    if message.text.startswith("/"):
+        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+        return 0
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -294,6 +354,9 @@ def service_type_add(message):
 
 
 def add_os(message, service_type):
+    if message.text.startswith("/"):
+        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+        return 0
     if message.text == "Отмена":
         bot.send_message(
             message.chat.id, "Добавление сервиса отменено",
@@ -320,6 +383,9 @@ def delete_os_message(message):
 
 
 def service_type_delete(message):
+    if message.text.startswith("/"):
+        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+        return 0
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -336,6 +402,9 @@ def service_type_delete(message):
 
 
 def delete_os(message, service_type):
+    if message.text.startswith("/"):
+        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+        return 0
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Удаление сервиса отменено", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -359,6 +428,9 @@ def survey_message(message):
 
 
 def team_type_survey(message):
+    if message.text.startswith("/"):
+        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+        return 0
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
