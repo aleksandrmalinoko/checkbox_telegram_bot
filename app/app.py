@@ -102,14 +102,14 @@ def start_message(message):
 
 @bot.message_handler(commands=['status'])
 def status_message(message):
-    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, selective=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
         button = KeyboardButton(text=type_service)
         keyboard.add(button)
     button = KeyboardButton(text="Отмена")
     keyboard.add(button)
-    bot.send_message(message.chat.id, "Выберите тип сервисов", reply_markup=keyboard)
+    bot.send_message(message.chat.id, "Выберите тип сервисов", reply_to_message_id=message.id, reply_markup=keyboard)
     bot.register_next_step_handler(message, service_type_status)
 
 
@@ -129,14 +129,14 @@ def service_type_status(message):
 @bot.message_handler(commands=['list'])
 def list_message(message):
     print(message.chat.id)
-    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, selective=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
         button = KeyboardButton(text=type_service)
         keyboard.add(button)
     button = KeyboardButton(text="Отмена")
     keyboard.add(button)
-    bot.send_message(message.chat.id, "Выберите тип сервисов", reply_markup=keyboard)
+    bot.send_message(message.chat.id, "Выберите тип сервисов", reply_to_message_id=message.id, reply_markup=keyboard)
     bot.register_next_step_handler(message, service_type_list)
 
 
