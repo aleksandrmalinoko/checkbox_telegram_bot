@@ -301,6 +301,31 @@ def zni_consumer_influence(message, number_zni, type_zni, platform_zni, system_z
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
     keyboard = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True)
+    button = KeyboardButton(text=f"{message.chat.first_name} {message.chat.last_name}")
+    keyboard.add(button)
+    button = KeyboardButton(text="Отмена")
+    keyboard.add(button)
+    bot.send_message(message.chat.id, "Потвердите или укажите другое имя ответственного", reply_markup=keyboard)
+    bot.register_next_step_handler(
+        message,
+        zni_responsible,
+        number_zni=number_zni,
+        type_zni=type_zni,
+        platform_zni=platform_zni,
+        system_zni=system_zni,
+        monitoring_influence_zni=monitoring_influence_zni,
+        consumer_influence_zni=message.text
+    )
+
+
+def zni_responsible(message, number_zni, type_zni, platform_zni, system_zni, monitoring_influence_zni, consumer_influence_zni):
+    if message.text.startswith("/"):
+        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+        return 0
+    if message.text == "Отмена":
+        bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
+        return 0
+    keyboard = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True)
     button = KeyboardButton(text="Без описания")
     keyboard.add(button)
     button = KeyboardButton(text="Отмена")
@@ -314,11 +339,12 @@ def zni_consumer_influence(message, number_zni, type_zni, platform_zni, system_z
         platform_zni=platform_zni,
         system_zni=system_zni,
         monitoring_influence_zni=monitoring_influence_zni,
-        consumer_influence_zni=message.text
+        consumer_influence_zni=consumer_influence_zni,
+        responsible_zni=message.text
     )
 
 
-def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, system_zni, monitoring_influence_zni, consumer_influence_zni):
+def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, system_zni, monitoring_influence_zni, consumer_influence_zni, responsible_zni):
     if message.text.startswith("/"):
         bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -335,7 +361,7 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
                        f"Сервис: {system_zni}\n{description_of_the_work}"\
                        f"Влияние на мониторинг: {monitoring_influence_zni}\n" \
                        f"Влияние на потребителей: {consumer_influence_zni}\n" \
-                       f"Ответственный: {message.chat.first_name} {message.chat.last_name} @{message.chat.username}"
+                       f"Ответственный: {responsible_zni} @{message.chat.username}"
     msg = bot.send_message(omni_chat_id, formatted_string, reply_markup=ReplyKeyboardRemove())
     omni_msg_id = msg.id
     buttons: list = [InlineKeyboardButton("Завершить работы", callback_data=f"ok_{omni_msg_id}_zni"),
