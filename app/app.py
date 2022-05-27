@@ -181,6 +181,28 @@ def zni_number(message):
         bot.register_next_step_handler(message, zni_number)
         return 0
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    service_types = config['zni']['types']
+    for type_service in service_types:
+        button = KeyboardButton(text=type_service)
+        keyboard.add(button)
+    button = KeyboardButton(text="Отмена")
+    keyboard.add(button)
+    bot.send_message(message.chat.id, "Выберите тип ЗНИ", reply_markup=keyboard)
+    bot.register_next_step_handler(
+        message,
+        zni_type,
+        number_zni=number_zni
+    )
+
+
+def zni_type(message, number_zni):
+    if message.text.startswith("/"):
+        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+        return 0
+    if message.text == "Отмена":
+        bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
+        return 0
+    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
         button = KeyboardButton(text=type_service)
@@ -191,11 +213,12 @@ def zni_number(message):
     bot.register_next_step_handler(
         message,
         zni_platform,
-        number_zni=number_zni
+        number_zni=number_zni,
+        type_zni=message.text
     )
 
 
-def zni_platform(message, number_zni):
+def zni_platform(message, number_zni, type_zni):
     if message.text.startswith("/"):
         bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -214,11 +237,12 @@ def zni_platform(message, number_zni):
         message,
         zni_system,
         number_zni=number_zni,
+        type_zni=type_zni,
         platform_zni=message.text
     )
 
 
-def zni_system(message, number_zni, platform_zni):
+def zni_system(message, number_zni, type_zni, platform_zni):
     if message.text.startswith("/"):
         bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -237,12 +261,13 @@ def zni_system(message, number_zni, platform_zni):
         message,
         zni_monitoring_influence,
         number_zni=number_zni,
+        type_zni=type_zni,
         platform_zni=platform_zni,
         system_zni=message.text
     )
 
 
-def zni_monitoring_influence(message, number_zni, platform_zni, system_zni):
+def zni_monitoring_influence(message, number_zni, type_zni, platform_zni, system_zni):
     if message.text.startswith("/"):
         bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -261,13 +286,14 @@ def zni_monitoring_influence(message, number_zni, platform_zni, system_zni):
         message,
         zni_consumer_influence,
         number_zni=number_zni,
+        type_zni=type_zni,
         platform_zni=platform_zni,
         system_zni=system_zni,
         monitoring_influence_zni=message.text
     )
 
 
-def zni_consumer_influence(message, number_zni, platform_zni, system_zni, monitoring_influence_zni):
+def zni_consumer_influence(message, number_zni, type_zni, platform_zni, system_zni, monitoring_influence_zni):
     if message.text.startswith("/"):
         bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -284,6 +310,7 @@ def zni_consumer_influence(message, number_zni, platform_zni, system_zni, monito
         message,
         zni_description_of_the_work,
         number_zni=number_zni,
+        type_zni=type_zni,
         platform_zni=platform_zni,
         system_zni=system_zni,
         monitoring_influence_zni=monitoring_influence_zni,
@@ -291,7 +318,7 @@ def zni_consumer_influence(message, number_zni, platform_zni, system_zni, monito
     )
 
 
-def zni_description_of_the_work(message, number_zni, platform_zni, system_zni, monitoring_influence_zni, consumer_influence_zni):
+def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, system_zni, monitoring_influence_zni, consumer_influence_zni):
     if message.text.startswith("/"):
         bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -304,6 +331,7 @@ def zni_description_of_the_work(message, number_zni, platform_zni, system_zni, m
         description_of_the_work = f"Описание работ: {message.text}\n"
     formatted_string = f"{platform_zni}\n" \
                        f"Начало работ по ЗНИ {number_zni}\n" \
+                       f"Тип ЗНИ: {type_zni.lower()}\n"\
                        f"Сервис: {system_zni}\n{description_of_the_work}"\
                        f"Влияние на мониторинг: {monitoring_influence_zni}\n" \
                        f"Влияние на потребителей: {consumer_influence_zni}\n" \
