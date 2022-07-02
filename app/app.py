@@ -10,7 +10,11 @@ from telebot.types import (
 )
 from configparser import ConfigParser
 import yaml
+import prometheus_client
+from prometheus_client import Counter
 
+
+using_bot_counter = Counter("using_bot_count", "request to the bot", ['method', 'user_id', 'username'])
 parser = ConfigParser()
 parser.read(Path('init.ini').absolute())
 telegram_api_token = parser['telegram']['telegram_api_token']
@@ -97,11 +101,17 @@ def update_buttons(inline_keyboard, change='', ok_text="Успешно", fail_te
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
-    bot.send_message(message.chat.id, "'osstatus' для меню статуса сервисов")
+    using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
+    bot.send_message(message.chat.id, "Доступные команды:\n\
+/status - Меню статуса сервисов\n\
+/list - Список сервисов\n\
+/survey - Опрос сотрудников\n\
+/zni - Отправить информирование о работах")
 
 
 @bot.message_handler(commands=['status'])
 def status_message(message):
+    using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, selective=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
@@ -129,6 +139,7 @@ def service_type_status(message):
 @bot.message_handler(commands=['list'])
 def list_message(message):
     print(message.chat.id)
+    using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, selective=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
@@ -155,6 +166,7 @@ def service_type_list(message):
 
 @bot.message_handler(commands=['zni'])
 def zni_message(message):
+    using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
     if message.chat.type != "private":
         bot.send_message(message.chat.id, "Используйте данную команду только в личных сообщениях боту")
         return 0
@@ -381,6 +393,7 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
 
 @bot.message_handler(commands=['addservice'])
 def add_service_message(message):
+    using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
@@ -425,6 +438,7 @@ def add_os(message, service_type):
 
 @bot.message_handler(commands=['deleteservice'])
 def delete_os_message(message):
+    using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
@@ -470,6 +484,7 @@ def delete_os(message, service_type):
 
 @bot.message_handler(commands=['survey'])
 def survey_message(message):
+    using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
@@ -579,4 +594,5 @@ def query_handler(call):
     )
 
 
+prometheus_client.start_http_server(9300)
 bot.infinity_polling()
