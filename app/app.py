@@ -367,7 +367,7 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
         description_of_the_work = ""
     else:
         description_of_the_work = f"Описание работ: {message.text}\n"
-    formatted_string = f"{platform_zni}\n" \
+    formatted_string = f"#{platform_zni}\n" \
                        f"Начало работ по ЗНИ {number_zni}\n" \
                        f"Тип ЗНИ: {type_zni.lower()}\n"\
                        f"Сервис: {system_zni}\n{description_of_the_work}"\
@@ -376,9 +376,24 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
                        f"Ответственный: {responsible_zni} @{message.chat.username}"
     msg = bot.send_message(omni_chat_id, formatted_string, reply_markup=ReplyKeyboardRemove())
     omni_msg_id = msg.id
-    buttons: list = [InlineKeyboardButton("Завершить работы", callback_data=f"ok_{omni_msg_id}_zni"),
-                     InlineKeyboardButton("Завершить с ошибкой", callback_data=f"fail_{omni_msg_id}_zni")]
-    keyboard = InlineKeyboardMarkup(build_menu(buttons, n_cols=2))
+    call_system_zni = f"{system_zni.split(' ')[0]}_{system_zni.split(' ')[1]}"
+    call_number_zni = number_zni.split('-')[1]
+    if platform_zni == "Общие_сервисы":
+        call_platform_zni = 'OS'
+    elif platform_zni == "Служебные_сервисы":
+        call_platform_zni = 'SS'
+    elif platform_zni == "ЕПА":
+        call_platform_zni = 'EPA'
+    else:
+        call_platform_zni = 'UIP'
+    call_data_msg = f"{omni_msg_id}_{call_system_zni}_{call_number_zni}_{call_platform_zni}_zni"
+    buttons: list = [InlineKeyboardButton("Завершено успешно",
+                                          callback_data=f"ok_{call_data_msg}"),
+                     InlineKeyboardButton("Завершено частично",
+                                          callback_data=f"partially_{call_data_msg}"),
+                     InlineKeyboardButton("Завершено с ошибкой",
+                                          callback_data=f"fail_{call_data_msg}")]
+    keyboard = InlineKeyboardMarkup(build_menu(buttons, n_cols=1))
     bot.send_message(
         message.chat.id,
         f"Готово",
@@ -509,7 +524,7 @@ def team_type_survey(message):
     bot.send_message(message.chat.id, "Опрос", reply_markup=reply_markup)
 
 
-@bot.callback_query_handler(func=lambda call: call.data.endswith('ok') or call.data.endswith('fail'))
+@bot.callback_query_handler(func=lambda call: call.data.endswith('ok') or call.data.endswith('fail') or call.data.endswith('otm'))
 def query_handler(call):
     bot.answer_callback_query(callback_query_id=call.id, text='')
     if call.message.html_text == "Статус сервисов":
@@ -536,11 +551,22 @@ def query_handler(call):
 @bot.callback_query_handler(func=lambda call: call.data.endswith('zni'))
 def query_handler(call):
     bot.answer_callback_query(callback_query_id=call.id, text='')
-    zni_status, msg_id, _ = call.data.split('_')
-    if zni_status == "ok":
-        bot.send_message(omni_chat_id, "Работы завершены успешно", reply_to_message_id=msg_id)
+    zni_status, msg_id, system_zni, mnemo_system_zni, number_zni, platform_zni, _ = call.data.split('_')
+    if platform_zni == 'OS':
+        platform_zni = "Общие_сервисы"
+    elif platform_zni == 'SS':
+        platform_zni = "Служебные_сервисы"
+    elif platform_zni == 'EPA':
+        platform_zni = "ЕПА"
     else:
-        bot.send_message(omni_chat_id, "Работы завершены с ошибками", reply_to_message_id=msg_id)
+        platform_zni = 'УИП'
+    msg_text = f"#{platform_zni}\nСервис {system_zni} {mnemo_system_zni}\nРаботы по ЗНИ C-{number_zni}"
+    if zni_status == "ok":
+        bot.send_message(omni_chat_id, f"{msg_text} завершены успешно", reply_to_message_id=msg_id)
+    elif zni_status == "partially":
+        bot.send_message(omni_chat_id, f"{msg_text} завершены частично", reply_to_message_id=msg_id)
+    else:
+        bot.send_message(omni_chat_id, f"{msg_text} завершены с ошибками", reply_to_message_id=msg_id)
     bot.edit_message_text(
         text="Работы завершены. Не забудьте закрыть ЗНИ.",
         chat_id=call.message.chat.id,
@@ -553,7 +579,11 @@ def query_handler(call):
 def query_handler(call):
     bot.answer_callback_query(callback_query_id=call.id, text='')
     report_message = generate_report(call.message.json['reply_markup']['inline_keyboard'])
-    buttons = [InlineKeyboardButton("Изменить", callback_data=f"change"), ]
+    if call.message.json['text'] == "Опрос":
+        change_type = 'survey'
+    else:
+        change_type = 'service'
+    buttons = [InlineKeyboardButton("Изменить", callback_data=f"change_{change_type}"), ]
     reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=3))
     bot.edit_message_text(
         text=report_message,
@@ -565,7 +595,16 @@ def query_handler(call):
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('change'))
 def query_handler(call):
-    bot.answer_callback_query(callback_query_id=call.id, text='изменить')
+    bot.answer_callback_query(callback_query_id=call.id, text='')
+    _, change_type = call.data.split('_')
+    if change_type == 'survey':
+        ok_text = "Да"
+        fail_text = "Нет"
+        msg_text = "Опрос"
+    else:
+        ok_text = "Успешно"
+        fail_text = "Ошибки"
+        msg_text = "Статус сервисов"
     buttons: list = []
     idx = 0
     names = call.message.text.split('\n')
@@ -576,8 +615,8 @@ def query_handler(call):
         buttons.append(InlineKeyboardButton(name, callback_data=idx))
         status = status.lstrip()
         if status == "?":
-            buttons.append(InlineKeyboardButton("Успешно", callback_data=f"{idx}_ok"))
-            buttons.append(InlineKeyboardButton("Ошибки", callback_data=f"{idx}_fail"))
+            buttons.append(InlineKeyboardButton(ok_text, callback_data=f"{idx}_ok"))
+            buttons.append(InlineKeyboardButton(fail_text, callback_data=f"{idx}_fail"))
         elif status == '✅':
             buttons.append(InlineKeyboardButton("✅", callback_data=f"{idx}_status"))
             buttons.append(InlineKeyboardButton("Отмена", callback_data=f"{idx}_otm"))
@@ -587,7 +626,7 @@ def query_handler(call):
     buttons.append(InlineKeyboardButton("Сгенерировать отчет", callback_data=f"generate_report"))
     reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=3))
     bot.edit_message_text(
-        text="Статус сервисов",
+        text=msg_text,
         chat_id=call.message.chat.id,
         message_id=call.message.id,
         reply_markup=reply_markup
