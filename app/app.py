@@ -367,14 +367,20 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
         description_of_the_work = ""
     else:
         description_of_the_work = f"Описание работ: {message.text}\n"
+    if monitoring_influence_zni != "Нет":
+        monitoring_influence_zni = f"Влияние на мониторинг: *{monitoring_influence_zni}*\n"
+    else:
+        monitoring_influence_zni = ""
+    if consumer_influence_zni != "Нет":
+        consumer_influence_zni = f"*{consumer_influence_zni}*"
     formatted_string = f"#{platform_zni}\n" \
                        f"Начало работ по ЗНИ {number_zni}\n" \
                        f"Тип ЗНИ: {type_zni.lower()}\n"\
-                       f"Сервис: {system_zni}\n{description_of_the_work}"\
-                       f"Влияние на мониторинг: {monitoring_influence_zni}\n" \
+                       f"Сервис: *#{system_zni}*\n\n{description_of_the_work}\n"\
+                       f"{monitoring_influence_zni}" \
                        f"Влияние на потребителей: {consumer_influence_zni}\n" \
                        f"Ответственный: {responsible_zni} @{message.chat.username}"
-    msg = bot.send_message(omni_chat_id, formatted_string, reply_markup=ReplyKeyboardRemove())
+    msg = bot.send_message(omni_chat_id, formatted_string, reply_markup=ReplyKeyboardRemove(), parse_mode="Markdown")
     omni_msg_id = msg.id
     call_system_zni = f"{system_zni.split(' ')[0]}_{system_zni.split(' ')[1]}"
     call_number_zni = number_zni.split('-')[1]
@@ -402,7 +408,8 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
     bot.send_message(
         message.chat.id,
         f"Сообщение отправлено в чат 'Поддержка Omni':\n{formatted_string}",
-        reply_markup=keyboard
+        reply_markup=keyboard,
+        parse_mode="Markdown"
     )
 
 
