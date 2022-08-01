@@ -99,6 +99,10 @@ def update_buttons(inline_keyboard, change='', ok_text="Успешно", fail_te
     return buttons
 
 
+def do_markdown_syntax(input_string: str) -> str:
+    return input_string.replace(r"_", r"\_")
+
+
 @bot.message_handler(commands=['start'])
 def start_message(message):
     using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
@@ -357,6 +361,8 @@ def zni_responsible(message, number_zni, type_zni, platform_zni, system_zni, mon
 
 
 def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, system_zni, monitoring_influence_zni, consumer_influence_zni, responsible_zni):
+    platform_zni = do_markdown_syntax(platform_zni)
+    call_system_zni = f"{system_zni.split(' ')[0]}_{system_zni.split(' ')[1]}"
     if message.text.startswith("/"):
         bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -376,19 +382,18 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
     formatted_string = f"#{platform_zni}\n" \
                        f"Начало работ по ЗНИ {number_zni}\n" \
                        f"Тип ЗНИ: {type_zni.lower()}\n"\
-                       f"Сервис: *#{system_zni}*\n\n{description_of_the_work}\n"\
+                       f"Сервис: *{system_zni}*\n\n{description_of_the_work}\n"\
                        f"{monitoring_influence_zni}" \
                        f"Влияние на потребителей: {consumer_influence_zni}\n" \
                        f"Ответственный: {responsible_zni} @{message.chat.username}"
     msg = bot.send_message(omni_chat_id, formatted_string, reply_markup=ReplyKeyboardRemove(), parse_mode="Markdown")
     omni_msg_id = msg.id
-    call_system_zni = f"{system_zni.split(' ')[0]}_{system_zni.split(' ')[1]}"
     call_number_zni = number_zni.split('-')[1]
-    if platform_zni == "Общие_сервисы":
+    if platform_zni.find("Общие") != -1:
         call_platform_zni = 'OS'
-    elif platform_zni == "Служебные_сервисы":
+    elif platform_zni.find("Служебные") != -1:
         call_platform_zni = 'SS'
-    elif platform_zni == "ЕПА":
+    elif platform_zni.find("ЕПА") != -1:
         call_platform_zni = 'EPA'
     else:
         call_platform_zni = 'UIP'
@@ -560,7 +565,7 @@ def query_handler(call):
     bot.answer_callback_query(callback_query_id=call.id, text='')
     zni_status, msg_id, system_zni, mnemo_system_zni, number_zni, platform_zni, _ = call.data.split('_')
     if platform_zni == 'OS':
-        platform_zni = "Общие_сервисы"
+        platform_zni = "#Общие_сервисы"
     elif platform_zni == 'SS':
         platform_zni = "Служебные_сервисы"
     elif platform_zni == 'EPA':
@@ -569,17 +574,35 @@ def query_handler(call):
         platform_zni = 'УИП'
     msg_text = f"#{platform_zni}\nСервис {system_zni} {mnemo_system_zni}\nРаботы по ЗНИ C-{number_zni}"
     if zni_status == "ok":
+        msg = bot.edit_message_text(
+            text="Работы завершены. Не забудьте закрыть ЗНИ.",
+            chat_id=call.message.chat.id,
+            message_id=call.message.id,
+            reply_markup=InlineKeyboardMarkup([])
+        )
         bot.send_message(omni_chat_id, f"{msg_text} завершены успешно", reply_to_message_id=msg_id)
     elif zni_status == "partially":
+        msg = bot.edit_message_text(
+            text="Работы завершены. Не забудьте закрыть ЗНИ.",
+            chat_id=call.message.chat.id,
+            message_id=call.message.id,
+            reply_markup=InlineKeyboardMarkup([])
+        )
         bot.send_message(omni_chat_id, f"{msg_text} завершены частично", reply_to_message_id=msg_id)
     else:
+        msg = bot.edit_message_text(
+            text="Опишите причину",
+            chat_id=call.message.chat.id,
+            message_id=call.message.id,
+            reply_markup=InlineKeyboardMarkup([])
+        )
         bot.send_message(omni_chat_id, f"{msg_text} завершены с ошибками", reply_to_message_id=msg_id)
-    bot.edit_message_text(
-        text="Работы завершены. Не забудьте закрыть ЗНИ.",
-        chat_id=call.message.chat.id,
-        message_id=call.message.id,
-        reply_markup=InlineKeyboardMarkup([])
-    )
+        bot.register_next_step_handler(msg, test_call_next)
+
+
+def test_call_next(message):
+    a = 5
+    bot.send_message(message.chat.id, f"nextcall")
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('generate_report'))
