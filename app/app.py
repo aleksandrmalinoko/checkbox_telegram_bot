@@ -572,7 +572,7 @@ def query_handler(call):
         platform_zni = "ЕПА"
     else:
         platform_zni = 'УИП'
-    msg_text = f"#{platform_zni}\nСервис {system_zni} {mnemo_system_zni}\nРаботы по ЗНИ C-{number_zni}"
+    msg_text = f"{platform_zni}\nСервис {system_zni} {mnemo_system_zni}\nРаботы по ЗНИ C-{number_zni}"
     if zni_status == "ok":
         msg = bot.edit_message_text(
             text="Работы завершены. Не забудьте закрыть ЗНИ.",
@@ -583,12 +583,13 @@ def query_handler(call):
         bot.send_message(omni_chat_id, f"{msg_text} завершены успешно", reply_to_message_id=msg_id)
     elif zni_status == "partially":
         msg = bot.edit_message_text(
-            text="Работы завершены. Не забудьте закрыть ЗНИ.",
+            text="Опишите причину",
             chat_id=call.message.chat.id,
             message_id=call.message.id,
             reply_markup=InlineKeyboardMarkup([])
         )
-        bot.send_message(omni_chat_id, f"{msg_text} завершены частично", reply_to_message_id=msg_id)
+        msg_text = f"{msg_text} завершены частично"
+        bot.register_next_step_handler(msg, reason_of_failed_work, msg_text=msg_text, msg_id=msg_id)
     else:
         msg = bot.edit_message_text(
             text="Опишите причину",
@@ -596,13 +597,18 @@ def query_handler(call):
             message_id=call.message.id,
             reply_markup=InlineKeyboardMarkup([])
         )
-        bot.send_message(omni_chat_id, f"{msg_text} завершены с ошибками", reply_to_message_id=msg_id)
-        bot.register_next_step_handler(msg, test_call_next)
+        msg_text = f"{msg_text} завершены с ошибками"
+        bot.register_next_step_handler(msg, reason_of_failed_work, msg_text=msg_text, msg_id=msg_id)
 
 
-def test_call_next(message):
-    a = 5
-    bot.send_message(message.chat.id, f"nextcall")
+def reason_of_failed_work(message, msg_text, msg_id):
+    bot.send_message(
+        omni_chat_id,
+        f"{msg_text}\nПричина: {message.text}",
+        reply_to_message_id=msg_id
+    )
+    bot.send_message(message.chat.id, f"Работы завершены. Не забудьте закрыть ЗНИ.")
+
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('generate_report'))
