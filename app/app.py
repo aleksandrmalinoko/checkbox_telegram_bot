@@ -21,7 +21,7 @@ import time
 from urllib3.exceptions import InsecureRequestWarning
 import logging
 
-logging.basicConfig(filename="logs/os_check_list.logs", level=logging.INFO)
+logging.basicConfig(filename="logs/os_check_list.log", level=logging.INFO)
 using_bot_counter = Counter("using_bot_count", "request to the bot", ['method', 'user_id', 'username'])
 parser = ConfigParser()
 parser.read(Path('init.ini').absolute())
