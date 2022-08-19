@@ -9,6 +9,7 @@
 .LSOverride
 app/init.ini
 app/config.yaml
+.logs
 # Icon must end with two \r
 Icon
 
