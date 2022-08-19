@@ -292,3 +292,4 @@ pip-selfcheck.json
 
 # End of https://www.toptal.com/developers/gitignore/api/pycharm,macos,python,venv
 /app/logs/os_check_list.logs
+/app/logs/
