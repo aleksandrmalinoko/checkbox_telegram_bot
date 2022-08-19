@@ -9,7 +9,7 @@
 .LSOverride
 app/init.ini
 app/config.yaml
-.logs
+app/logs/os_check_list.logs
 # Icon must end with two \r
 Icon
 
