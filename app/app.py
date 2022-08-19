@@ -151,6 +151,8 @@ def start_message(message):
 @bot.message_handler(commands=['status'])
 def status_message(message):
     using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
+    logging.info(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. "
+                 f"{message.text}, {message.from_user.id}, {message.from_user.full_name}")
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, selective=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
@@ -179,6 +181,8 @@ def service_type_status(message):
 def list_message(message):
     print(message.chat.id)
     using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
+    logging.info(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. "
+                 f"{message.text}, {message.from_user.id}, {message.from_user.full_name}")
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, selective=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
@@ -206,6 +210,8 @@ def service_type_list(message):
 @bot.message_handler(commands=['zni'])
 def zni_message(message):
     using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
+    logging.info(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. "
+                 f"{message.text}, {message.from_user.id}, {message.from_user.full_name}")
     if message.chat.type != "private":
         bot.send_message(message.chat.id, "Используйте данную команду только в личных сообщениях боту")
         return 0
@@ -484,6 +490,8 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
 @bot.message_handler(commands=['addservice'])
 def add_service_message(message):
     using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
+    logging.info(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. "
+                 f"{message.text}, {message.from_user.id}, {message.from_user.full_name}")
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
@@ -529,6 +537,8 @@ def add_os(message, service_type):
 @bot.message_handler(commands=['deleteservice'])
 def delete_os_message(message):
     using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
+    logging.info(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. "
+                 f"{message.text}, {message.from_user.id}, {message.from_user.full_name}")
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
@@ -575,6 +585,8 @@ def delete_os(message, service_type):
 @bot.message_handler(commands=['survey'])
 def survey_message(message):
     using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
+    logging.info(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. "
+                 f"{message.text}, {message.from_user.id}, {message.from_user.full_name}")
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
     service_types = config['platform'].keys()
     for type_service in service_types:
