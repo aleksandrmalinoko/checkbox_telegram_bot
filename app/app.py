@@ -1,6 +1,11 @@
+import contextlib
+import warnings
 from pathlib import Path
 import re
+import datetime
+import requests
 import telebot
+import urllib3
 from telebot.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
@@ -12,8 +17,11 @@ from configparser import ConfigParser
 import yaml
 import prometheus_client
 from prometheus_client import Counter
+import time
+from urllib3.exceptions import InsecureRequestWarning
+import logging
 
-
+logging.basicConfig(filename="logs/os_check_list.logs", level=logging.INFO)
 using_bot_counter = Counter("using_bot_count", "request to the bot", ['method', 'user_id', 'username'])
 parser = ConfigParser()
 parser.read(Path('init.ini').absolute())
@@ -23,6 +31,33 @@ bot = telebot.TeleBot(token=telegram_api_token)
 path: Path = Path(f"{Path.cwd()}/config.yaml").absolute()
 with open(path, 'r') as stream:
     config = yaml.safe_load(stream)
+
+urllib3.disable_warnings()
+old_merge_environment_settings = requests.Session.merge_environment_settings
+
+
+@contextlib.contextmanager
+def no_ssl_verification():
+    opened_adapters = set()
+
+    def merge_environment_settings(self, url, proxies, stream, verify, cert):
+        opened_adapters.add(self.get_adapter(url))
+        settings = old_merge_environment_settings(self, url, proxies, stream, verify, cert)
+        settings['verify'] = False
+        return settings
+
+    requests.Session.merge_environment_settings = merge_environment_settings
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', InsecureRequestWarning)
+            yield
+    finally:
+        requests.Session.merge_environment_settings = old_merge_environment_settings
+        for adapter in opened_adapters:
+            try:
+                adapter.close()
+            except:
+                pass
 
 
 def build_menu(buttons, n_cols, header_buttons='', footer_buttons=''):
@@ -334,7 +369,8 @@ def zni_consumer_influence(message, number_zni, type_zni, platform_zni, system_z
     )
 
 
-def zni_responsible(message, number_zni, type_zni, platform_zni, system_zni, monitoring_influence_zni, consumer_influence_zni):
+def zni_responsible(message, number_zni, type_zni, platform_zni, system_zni, monitoring_influence_zni,
+                    consumer_influence_zni):
     if message.text.startswith("/"):
         bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -360,7 +396,8 @@ def zni_responsible(message, number_zni, type_zni, platform_zni, system_zni, mon
     )
 
 
-def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, system_zni, monitoring_influence_zni, consumer_influence_zni, responsible_zni):
+def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, system_zni, monitoring_influence_zni,
+                                consumer_influence_zni, responsible_zni):
     platform_zni = do_markdown_syntax(platform_zni)
     call_system_zni = f"{system_zni.split(' ')[0]}_{system_zni.split(' ')[1]}"
     if message.text.startswith("/"):
@@ -381,12 +418,31 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
         consumer_influence_zni = f"*{consumer_influence_zni}*"
     formatted_string = f"#{platform_zni}\n" \
                        f"Начало работ по ЗНИ {number_zni}\n" \
-                       f"Тип ЗНИ: {type_zni.lower()}\n"\
-                       f"Сервис: *{system_zni}*\n\n{description_of_the_work}\n"\
+                       f"Тип ЗНИ: {type_zni.lower()}\n" \
+                       f"Сервис: *{system_zni}*\n\n{description_of_the_work}\n" \
                        f"{monitoring_influence_zni}" \
                        f"Влияние на потребителей: {consumer_influence_zni}\n" \
                        f"Ответственный: {responsible_zni} @{message.chat.username}"
-    msg = bot.send_message(omni_chat_id, formatted_string, reply_markup=ReplyKeyboardRemove(), parse_mode="Markdown")
+    attempt_count = 0
+    while True:
+        try:
+            attempt_count += 1
+            msg = bot.send_message(omni_chat_id, formatted_string, reply_markup=ReplyKeyboardRemove(), parse_mode="Markdown")
+            logging.info(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. "
+                         f"Уведомление о ЗНИ {number_zni} на сервисе {system_zni} отправлено")
+            break
+        except Exception as e:
+            logging.error(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. "
+                          f"user {message.chat.username} get error while sending message to Telegram: {e}")
+            time.sleep(2)
+            if attempt_count < 10:
+                continue
+            else:
+                bot.send_message(
+                    message.chat.id,
+                    f"Сервер Telegram не ответил после 10 попыток. Попробуйте повторить запрос позже",
+                )
+                return -1
     omni_msg_id = msg.id
     call_number_zni = number_zni.split('-')[1]
     if platform_zni.find("Общие") != -1:
@@ -410,12 +466,19 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
         f"Готово",
         reply_markup=ReplyKeyboardRemove()
     )
-    bot.send_message(
-        message.chat.id,
-        f"Сообщение отправлено в чат 'Поддержка Omni':\n{formatted_string}",
-        reply_markup=keyboard,
-        parse_mode="Markdown"
-    )
+    while True:
+        try:
+            bot.send_message(
+                message.chat.id,
+                f"Сообщение отправлено в чат 'Поддержка Omni':\n{formatted_string}",
+                reply_markup=keyboard,
+                parse_mode="Markdown"
+            )
+            break
+        except Exception as e:
+            logging.error(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. "
+                          f"user {message.chat.username} get error while sending message to Telegram: {e}")
+            continue
 
 
 @bot.message_handler(commands=['addservice'])
@@ -536,7 +599,8 @@ def team_type_survey(message):
     bot.send_message(message.chat.id, "Опрос", reply_markup=reply_markup)
 
 
-@bot.callback_query_handler(func=lambda call: call.data.endswith('ok') or call.data.endswith('fail') or call.data.endswith('otm'))
+@bot.callback_query_handler(
+    func=lambda call: call.data.endswith('ok') or call.data.endswith('fail') or call.data.endswith('otm'))
 def query_handler(call):
     bot.answer_callback_query(callback_query_id=call.id, text='')
     if call.message.html_text == "Статус сервисов":
@@ -608,7 +672,6 @@ def reason_of_failed_work(message, msg_text, msg_id):
         reply_to_message_id=msg_id
     )
     bot.send_message(message.chat.id, f"Работы завершены. Не забудьте закрыть ЗНИ.")
-
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('generate_report'))

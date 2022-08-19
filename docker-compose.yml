@@ -8,6 +8,9 @@ services:
       - type: bind
         source: /home/ubuntu/bots_config/config.yaml
         target: /OS_check_list/config.yaml
+      - type: bind
+        source: /var/log/os-check-list-bot/os_check_list.logs
+        target: /OS_check_list/logs/os_check_list.logs
     network_mode: "host"
     restart: unless-stopped
     ports:
