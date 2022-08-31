@@ -36,6 +36,13 @@ urllib3.disable_warnings()
 old_merge_environment_settings = requests.Session.merge_environment_settings
 
 
+def escape_markdown(text):
+    # Use {} and reverse markdown carefully.
+    parse = re.sub(r"([_*\[\]()~`>\#\+\-=|\.!])", r"\\\1", text)
+    reparse = re.sub(r"\\\\([_*\[\]()~`>\#\+\-=|\.!])", r"\1", parse)
+    return reparse
+
+
 @contextlib.contextmanager
 def no_ssl_verification():
     opened_adapters = set()
@@ -421,14 +428,14 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
     else:
         monitoring_influence_zni = ""
     if consumer_influence_zni != "Нет":
-        consumer_influence_zni = f"*{consumer_influence_zni}*"
+        consumer_influence_zni = f"*{escape_markdown(consumer_influence_zni)}*"
     formatted_string = f"#{platform_zni}\n" \
                        f"Начало работ по ЗНИ {number_zni}\n" \
                        f"Тип ЗНИ: {type_zni.lower()}\n" \
-                       f"Сервис: *{system_zni}*\n\n{description_of_the_work}\n" \
+                       f"Сервис: *{system_zni}*\n\n{escape_markdown(description_of_the_work)}\n" \
                        f"{monitoring_influence_zni}" \
                        f"Влияние на потребителей: {consumer_influence_zni}\n" \
-                       f"Ответственный: {responsible_zni} @{message.chat.username}"
+                       f"Ответственный: {escape_markdown(responsible_zni)} @{escape_markdown(f'{message.chat.username}_lalal')}"
     attempt_count = 0
     while True:
         try:
