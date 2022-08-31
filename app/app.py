@@ -429,13 +429,17 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
         monitoring_influence_zni = ""
     if consumer_influence_zni != "Нет":
         consumer_influence_zni = f"*{escape_markdown(consumer_influence_zni)}*"
+    if message.chat.username:
+        responsible_username = f" @{escape_markdown(message.chat.username)}"
+    else:
+        responsible_username = ''
     formatted_string = f"#{platform_zni}\n" \
                        f"Начало работ по ЗНИ {number_zni}\n" \
                        f"Тип ЗНИ: {type_zni.lower()}\n" \
                        f"Сервис: *{system_zni}*\n\n{escape_markdown(description_of_the_work)}\n" \
                        f"{monitoring_influence_zni}" \
                        f"Влияние на потребителей: {consumer_influence_zni}\n" \
-                       f"Ответственный: {escape_markdown(responsible_zni)} @{escape_markdown(message.chat.username)}"
+                       f"Ответственный: {escape_markdown(responsible_zni)}{responsible_username}"
     attempt_count = 0
     while True:
         try:
