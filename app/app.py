@@ -435,7 +435,7 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
                        f"Сервис: *{system_zni}*\n\n{escape_markdown(description_of_the_work)}\n" \
                        f"{monitoring_influence_zni}" \
                        f"Влияние на потребителей: {consumer_influence_zni}\n" \
-                       f"Ответственный: {escape_markdown(responsible_zni)} @{escape_markdown(f'{message.chat.username}_lalal')}"
+                       f"Ответственный: {escape_markdown(responsible_zni)} @{escape_markdown(message.chat.username)}"
     attempt_count = 0
     while True:
         try:
