@@ -37,9 +37,18 @@ old_merge_environment_settings = requests.Session.merge_environment_settings
 
 
 def escape_markdown(text):
-    # Use {} and reverse markdown carefully.
-    parse = re.sub(r"([_*\[\]()~`>\#\+\-=|\.!])", r"\\\1", text)
-    reparse = re.sub(r"\\\\([_*\[\]()~`>\#\+\-=|\.!])", r"\1", parse)
+    reparse = text.replace("\\", r"\\")
+    reparse = reparse.replace(".", r"\.")
+    reparse = reparse.replace("-", r"\-")
+    reparse = reparse.replace("(", r"\(")
+    reparse = reparse.replace(")", r"\)")
+    reparse = reparse.replace("]", r"\]")
+    reparse = reparse.replace("[", r"\[")
+    reparse = reparse.replace("_", r"\_")
+    reparse = reparse.replace("*", r"\*")
+    reparse = reparse.replace("`", r"\`")
+    reparse = reparse.replace("#", r"\#")
+    reparse = reparse.replace("!", r"\!")
     return reparse
 
 
@@ -424,7 +433,7 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
     else:
         description_of_the_work = f"Описание работ: {message.text}\n"
     if monitoring_influence_zni != "Нет":
-        monitoring_influence_zni = f"Влияние на мониторинг: *{monitoring_influence_zni}*\n"
+        monitoring_influence_zni = f"_Влияние на мониторинг:_ *{monitoring_influence_zni}*\n"
     else:
         monitoring_influence_zni = ""
     if consumer_influence_zni != "Нет":
@@ -433,18 +442,18 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
         responsible_username = f" @{escape_markdown(message.chat.username)}"
     else:
         responsible_username = ''
-    formatted_string = f"#{platform_zni}\n" \
-                       f"Начало работ по ЗНИ {number_zni}\n" \
+    formatted_string = f"\#{platform_zni}\n" \
+                       f"Начало работ по ЗНИ *{escape_markdown(number_zni)}*\n" \
                        f"Тип ЗНИ: {type_zni.lower()}\n" \
-                       f"Сервис: *{system_zni}*\n\n{escape_markdown(description_of_the_work)}\n" \
+                       f"_Сервис:_ *{system_zni}*\n\n{escape_markdown(description_of_the_work)}\n" \
                        f"{monitoring_influence_zni}" \
-                       f"Влияние на потребителей: {consumer_influence_zni}\n" \
-                       f"Ответственный: {escape_markdown(responsible_zni)}{responsible_username}"
+                       f"_Влияние на потребителей:_ {consumer_influence_zni}\n\n" \
+                       f"_Ответственный:_ {escape_markdown(responsible_zni)}{responsible_username}\n"
     attempt_count = 0
     while True:
         try:
             attempt_count += 1
-            msg = bot.send_message(omni_chat_id, formatted_string, reply_markup=ReplyKeyboardRemove(), parse_mode="Markdown")
+            msg = bot.send_message(omni_chat_id, formatted_string, reply_markup=ReplyKeyboardRemove(), parse_mode="MarkdownV2")
             logging.info(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. "
                          f"Уведомление о ЗНИ {number_zni} на сервисе {system_zni} отправлено")
             break
@@ -489,7 +498,7 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
                 message.chat.id,
                 f"Сообщение отправлено в чат 'Поддержка Omni':\n{formatted_string}",
                 reply_markup=keyboard,
-                parse_mode="Markdown"
+                parse_mode="MarkdownV2"
             )
             break
         except Exception as e:
