@@ -433,7 +433,7 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
     else:
         description_of_the_work = f"Описание работ: {message.text}\n"
     if monitoring_influence_zni != "Нет":
-        monitoring_influence_zni = f"_Влияние на мониторинг:_ *{monitoring_influence_zni}*\n"
+        monitoring_influence_zni = f"_Влияние на мониторинг:_ *{escape_markdown(monitoring_influence_zni)}*\n"
     else:
         monitoring_influence_zni = ""
     if consumer_influence_zni != "Нет":
@@ -447,7 +447,7 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
                        f"Тип ЗНИ: {type_zni.lower()}\n" \
                        f"_Сервис:_ *{system_zni}*\n\n{escape_markdown(description_of_the_work)}\n" \
                        f"{monitoring_influence_zni}" \
-                       f"_Влияние на потребителей:_ {consumer_influence_zni}\n\n" \
+                       f"_Влияние на потребителей:_ {escape_markdown(consumer_influence_zni)}\n\n" \
                        f"_Ответственный:_ {escape_markdown(responsible_zni)}{responsible_username}\n"
     attempt_count = 0
     while True:
