@@ -164,63 +164,63 @@ def start_message(message):
 /zni - Отправить информирование о работах")
 
 
-@bot.message_handler(commands=['status'])
-def status_message(message):
-    using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
-    logging.info(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. "
-                 f"{message.text}, {message.from_user.id}, {message.from_user.full_name}")
-    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, selective=True)
-    service_types = config['platform'].keys()
-    for type_service in service_types:
-        button = KeyboardButton(text=type_service)
-        keyboard.add(button)
-    button = KeyboardButton(text="Отмена")
-    keyboard.add(button)
-    bot.send_message(message.chat.id, "Выберите тип сервисов", reply_to_message_id=message.id, reply_markup=keyboard)
-    bot.register_next_step_handler(message, service_type_status)
-
-
-def service_type_status(message):
-    if message.text.startswith("/"):
-        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
-        return 0
-    if message.text == "Отмена":
-        bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
-        return 0
-    bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
-    buttons: list = generate_buttons(config['platform'][message.text]['services'])
-    reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=3))
-    bot.send_message(message.chat.id, "Статус сервисов", reply_markup=reply_markup)
-
-
-@bot.message_handler(commands=['list'])
-def list_message(message):
-    print(message.chat.id)
-    using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
-    logging.info(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. "
-                 f"{message.text}, {message.from_user.id}, {message.from_user.full_name}")
-    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, selective=True)
-    service_types = config['platform'].keys()
-    for type_service in service_types:
-        button = KeyboardButton(text=type_service)
-        keyboard.add(button)
-    button = KeyboardButton(text="Отмена")
-    keyboard.add(button)
-    bot.send_message(message.chat.id, "Выберите тип сервисов", reply_to_message_id=message.id, reply_markup=keyboard)
-    bot.register_next_step_handler(message, service_type_list)
-
-
-def service_type_list(message):
-    if message.text.startswith("/"):
-        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
-        return 0
-    if message.text == "Отмена":
-        bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
-        return 0
-    bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
-    services_list = config['platform'][message.text]['services']
-    str_service_list = '\n'.join(services_list)
-    bot.send_message(message.chat.id, str_service_list)
+# @bot.message_handler(commands=['status'])
+# def status_message(message):
+#     using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
+#     logging.info(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. "
+#                  f"{message.text}, {message.from_user.id}, {message.from_user.full_name}")
+#     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, selective=True)
+#     service_types = config['platform'].keys()
+#     for type_service in service_types:
+#         button = KeyboardButton(text=type_service)
+#         keyboard.add(button)
+#     button = KeyboardButton(text="Отмена")
+#     keyboard.add(button)
+#     bot.send_message(message.chat.id, "Выберите тип сервисов", reply_to_message_id=message.id, reply_markup=keyboard)
+#     bot.register_next_step_handler(message, service_type_status)
+#
+#
+# def service_type_status(message):
+#     if message.text.startswith("/"):
+#         bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+#         return 0
+#     if message.text == "Отмена":
+#         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
+#         return 0
+#     bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
+#     buttons: list = generate_buttons(config['platform'][message.text]['services'])
+#     reply_markup = InlineKeyboardMarkup(build_menu(buttons, n_cols=3))
+#     bot.send_message(message.chat.id, "Статус сервисов", reply_markup=reply_markup)
+#
+#
+# @bot.message_handler(commands=['list'])
+# def list_message(message):
+#     print(message.chat.id)
+#     using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
+#     logging.info(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. "
+#                  f"{message.text}, {message.from_user.id}, {message.from_user.full_name}")
+#     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, selective=True)
+#     service_types = config['platform'].keys()
+#     for type_service in service_types:
+#         button = KeyboardButton(text=type_service)
+#         keyboard.add(button)
+#     button = KeyboardButton(text="Отмена")
+#     keyboard.add(button)
+#     bot.send_message(message.chat.id, "Выберите тип сервисов", reply_to_message_id=message.id, reply_markup=keyboard)
+#     bot.register_next_step_handler(message, service_type_list)
+#
+#
+# def service_type_list(message):
+#     if message.text.startswith("/"):
+#         bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+#         return 0
+#     if message.text == "Отмена":
+#         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
+#         return 0
+#     bot.send_message(message.chat.id, "Тип выбран", reply_markup=ReplyKeyboardRemove())
+#     services_list = config['platform'][message.text]['services']
+#     str_service_list = '\n'.join(services_list)
+#     bot.send_message(message.chat.id, str_service_list)
 
 
 @bot.message_handler(commands=['zni'])
@@ -447,7 +447,7 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
                        f"Тип ЗНИ: {type_zni.lower()}\n" \
                        f"_Сервис:_ *{system_zni}*\n\n{escape_markdown(description_of_the_work)}\n" \
                        f"{monitoring_influence_zni}" \
-                       f"_Влияние на потребителей:_ {escape_markdown(consumer_influence_zni)}\n\n" \
+                       f"_Влияние на потребителей:_ {consumer_influence_zni}\n\n" \
                        f"_Ответственный:_ {escape_markdown(responsible_zni)}{responsible_username}\n"
     attempt_count = 0
     while True:
@@ -602,33 +602,33 @@ def delete_os(message, service_type):
     bot.send_message(message.chat.id, "Сервис удален", reply_markup=ReplyKeyboardRemove())
 
 
-@bot.message_handler(commands=['survey'])
-def survey_message(message):
-    using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
-    logging.info(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. "
-                 f"{message.text}, {message.from_user.id}, {message.from_user.full_name}")
-    keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
-    service_types = config['platform'].keys()
-    for type_service in service_types:
-        button = KeyboardButton(text=type_service)
-        keyboard.add(button)
-    button = KeyboardButton(text="Отмена")
-    keyboard.add(button)
-    bot.send_message(message.chat.id, "Выберите команду", reply_markup=keyboard)
-    bot.register_next_step_handler(message, team_type_survey)
-
-
-def team_type_survey(message):
-    if message.text.startswith("/"):
-        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
-        return 0
-    if message.text == "Отмена":
-        bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
-        return 0
-    bot.send_message(message.chat.id, "Команда выбрана", reply_markup=ReplyKeyboardRemove())
-    button_list = generate_buttons(config['platform'][message.text]['users'], ok_text="Да", fail_text="Нет")
-    reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=3))
-    bot.send_message(message.chat.id, "Опрос", reply_markup=reply_markup)
+# @bot.message_handler(commands=['survey'])
+# def survey_message(message):
+#     using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
+#     logging.info(f"{datetime.datetime.now().strftime('%d-%m-%Y %H:%M')}. "
+#                  f"{message.text}, {message.from_user.id}, {message.from_user.full_name}")
+#     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
+#     service_types = config['platform'].keys()
+#     for type_service in service_types:
+#         button = KeyboardButton(text=type_service)
+#         keyboard.add(button)
+#     button = KeyboardButton(text="Отмена")
+#     keyboard.add(button)
+#     bot.send_message(message.chat.id, "Выберите команду", reply_markup=keyboard)
+#     bot.register_next_step_handler(message, team_type_survey)
+#
+#
+# def team_type_survey(message):
+#     if message.text.startswith("/"):
+#         bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+#         return 0
+#     if message.text == "Отмена":
+#         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
+#         return 0
+#     bot.send_message(message.chat.id, "Команда выбрана", reply_markup=ReplyKeyboardRemove())
+#     button_list = generate_buttons(config['platform'][message.text]['users'], ok_text="Да", fail_text="Нет")
+#     reply_markup = InlineKeyboardMarkup(build_menu(button_list, n_cols=3))
+#     bot.send_message(message.chat.id, "Опрос", reply_markup=reply_markup)
 
 
 @bot.callback_query_handler(
