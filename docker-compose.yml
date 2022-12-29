@@ -13,5 +13,3 @@ services:
         target: /OS_check_list/logs/os_check_list.log
     network_mode: "host"
     restart: unless-stopped
-    ports:
-      - "9300:9300"
