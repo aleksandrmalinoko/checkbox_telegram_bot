@@ -157,10 +157,7 @@ def do_markdown_syntax(input_string: str) -> str:
 @bot.message_handler(commands=['start'])
 def start_message(message):
     using_bot_counter.labels(message.text, message.from_user.id, message.from_user.full_name).inc()
-    bot.send_message(message.chat.id, "Доступные команды:\n\
-/status - Меню статуса сервисов\n\
-/list - Список сервисов\n\
-/survey - Опрос сотрудников\n\
+    bot.send_message(message.chat.id, "Доступная команда:\n\
 /zni - Отправить информирование о работах")
 
 
