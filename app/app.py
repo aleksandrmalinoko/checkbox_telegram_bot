@@ -764,5 +764,5 @@ def query_handler(call):
     )
 
 
-# prometheus_client.start_http_server(9300)
+prometheus_client.start_http_server(9400)
 bot.infinity_polling()
