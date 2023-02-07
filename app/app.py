@@ -49,6 +49,7 @@ def escape_markdown(text):
     reparse = reparse.replace("`", r"\`")
     reparse = reparse.replace("#", r"\#")
     reparse = reparse.replace("!", r"\!")
+    reparse = reparse.replace("+", r"\+")
     return reparse
 
 
@@ -442,7 +443,7 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
     formatted_string = f"\#{platform_zni}\n" \
                        f"Начало работ по ЗНИ *{escape_markdown(number_zni)}*\n" \
                        f"Тип ЗНИ: {type_zni.lower()}\n" \
-                       f"_Сервис:_ *{system_zni}*\n\n{escape_markdown(description_of_the_work)}\n" \
+                       f"_Сервис:_ *{escape_markdown(system_zni)}*\n\n{escape_markdown(description_of_the_work)}\n" \
                        f"{monitoring_influence_zni}" \
                        f"_Влияние на потребителей:_ {consumer_influence_zni}\n\n" \
                        f"_Ответственный:_ {escape_markdown(responsible_zni)}{responsible_username}\n"
