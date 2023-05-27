@@ -416,10 +416,15 @@ def zni_responsible(message, number_zni, type_zni, platform_zni, system_zni, mon
     )
 
 
-def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, system_zni, monitoring_influence_zni,
-                                consumer_influence_zni, responsible_zni):
-    platform_zni = do_markdown_syntax(platform_zni)
-    call_system_zni = f"{system_zni.split(' ')[0]}_{system_zni.split(' ')[1]}"
+def zni_description_of_the_work(
+        message,
+        number_zni,
+        type_zni,
+        platform_zni,
+        system_zni,
+        monitoring_influence_zni,
+        consumer_influence_zni,
+        responsible_zni):
     if message.text.startswith("/"):
         bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
         return 0
@@ -430,6 +435,45 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
         description_of_the_work = ""
     else:
         description_of_the_work = f"Описание работ: {message.text}\n"
+    keyboard = ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, one_time_keyboard=True)
+    button = KeyboardButton(text="Без конференции")
+    keyboard.add(button)
+    button = KeyboardButton(text="Отмена")
+    keyboard.add(button)
+    bot.send_message(message.chat.id, "Укажите имя комнаты в Dion", reply_markup=keyboard)
+    bot.register_next_step_handler(
+        message,
+        zni_dion_room,
+        number_zni=number_zni,
+        type_zni=type_zni,
+        platform_zni=platform_zni,
+        system_zni=system_zni,
+        monitoring_influence_zni=monitoring_influence_zni,
+        consumer_influence_zni=consumer_influence_zni,
+        responsible_zni=responsible_zni,
+        description_of_the_work=description_of_the_work
+    )
+
+
+def zni_dion_room(message, number_zni, type_zni, platform_zni, system_zni, monitoring_influence_zni,
+                                consumer_influence_zni, responsible_zni, description_of_the_work):
+    platform_zni = do_markdown_syntax(platform_zni)
+    call_system_zni = f"{system_zni.split(' ')[0]}_{system_zni.split(' ')[1]}"
+    if message.text.startswith("/"):
+        bot.send_message(message.chat.id, "Неверное значение", reply_markup=ReplyKeyboardRemove())
+        return 0
+    if message.text == "Отмена":
+        bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
+        return 0
+    if message.text == "Без конференции":
+        dion_room_zni = ""
+    else:
+        search = re.search('(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w\.-]*)*\/?', message.text)
+        if search:
+            dion_room_zni = search.group()
+        else:
+            dion_room_zni = f"https://dion.vc/event/{message.text}"
+        dion_room_zni = f"Конференция Dion: {dion_room_zni}\n"
     if monitoring_influence_zni != "Нет":
         monitoring_influence_zni = f"_Влияние на мониторинг:_ *{escape_markdown(monitoring_influence_zni)}*\n"
     else:
@@ -446,7 +490,7 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
                        f"_Сервис:_ *{escape_markdown(system_zni)}*\n\n{escape_markdown(description_of_the_work)}\n" \
                        f"{monitoring_influence_zni}" \
                        f"_Влияние на потребителей:_ {consumer_influence_zni}\n\n" \
-                       f"_Ответственный:_ {escape_markdown(responsible_zni)}{responsible_username}\n"
+                       f"_Ответственный:_ {escape_markdown(responsible_zni)}{responsible_username}\n{escape_markdown(dion_room_zni)}\n"
     attempt_count = 0
     while True:
         try:
@@ -490,7 +534,7 @@ def zni_description_of_the_work(message, number_zni, type_zni, platform_zni, sys
         f"Готово",
         reply_markup=ReplyKeyboardRemove()
     )
-    while True:
+    for i in range(5):
         try:
             bot.send_message(
                 message.chat.id,
