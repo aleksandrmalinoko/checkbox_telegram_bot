@@ -243,14 +243,15 @@ def zni_number(message):
     if message.text == "Отмена":
         bot.send_message(message.chat.id, "Отменено", reply_markup=ReplyKeyboardRemove())
         return 0
-    regex_num = re.compile('\d{8}')
-    number_zni = regex_num.findall(message.text)
-    if number_zni:
-        number_zni = f"C-{number_zni[0]}"
-    else:
-        bot.send_message(message.chat.id, "Номер не соответствует формату (C-XXXXXXXX), повторите попытку")
-        bot.register_next_step_handler(message, zni_number)
-        return 0
+    # regex_num = re.compile('\d{8}')
+    # number_zni = regex_num.findall(message.text)
+    # if number_zni:
+    #     number_zni = f"C-{number_zni[0]}"
+    # else:
+    #     bot.send_message(message.chat.id, "Номер не соответствует формату (C-XXXXXXXX), повторите попытку")
+    #     bot.register_next_step_handler(message, zni_number)
+    #     return 0
+    number_zni = message.text
     keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     service_types = config['zni']['types']
     for type_service in service_types:
@@ -512,7 +513,8 @@ def zni_dion_room(message, number_zni, type_zni, platform_zni, system_zni, monit
                 )
                 return -1
     omni_msg_id = msg.id
-    call_number_zni = number_zni.split('-')[1]
+    # call_number_zni = number_zni.split('-')[1]
+    call_number_zni = number_zni
     if platform_zni.find("Общие") != -1:
         call_platform_zni = 'OS'
     elif platform_zni.find("Служебные") != -1:
@@ -710,7 +712,7 @@ def query_handler(call):
         platform_zni = "ЕПА"
     else:
         platform_zni = 'УИП'
-    msg_text = f"{platform_zni}\nСервис {system_zni} {mnemo_system_zni}\nРаботы по ЗНИ C-{number_zni}"
+    msg_text = f"{platform_zni}\nСервис {system_zni} {mnemo_system_zni}\nРаботы по ЗНИ {number_zni}"
     if zni_status == "ok":
         msg = bot.edit_message_text(
             text="Работы завершены. Не забудьте закрыть ЗНИ.",
