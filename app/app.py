@@ -515,14 +515,26 @@ def zni_dion_room(message, number_zni, type_zni, platform_zni, system_zni, monit
     omni_msg_id = msg.id
     # call_number_zni = number_zni.split('-')[1]
     call_number_zni = number_zni
-    if platform_zni.find("Общие") != -1:
-        call_platform_zni = 'OS'
-    elif platform_zni.find("Служебные") != -1:
-        call_platform_zni = 'SS'
+    if platform_zni.find("ОСП") != -1:
+        call_platform_zni = 'OSP'
+    elif platform_zni.find("ОСКК") != -1:
+        call_platform_zni = 'OSKK'
+    elif platform_zni.find("ССА") != -1:
+        call_platform_zni = 'ССА'
+    elif platform_zni.find("ССРД") != -1:
+        call_platform_zni = 'SSRD'
+    elif platform_zni.find("ССП") != -1:
+        call_platform_zni = 'SSP'
     elif platform_zni.find("ЕПА") != -1:
         call_platform_zni = 'EPA'
-    else:
+    elif platform_zni.find("ФОСП") != -1:
+        call_platform_zni = 'FOSP'
+    elif platform_zni.find("СПВ") != -1:
+        call_platform_zni = 'SPV'
+    elif platform_zni.find("УИП") != -1:
         call_platform_zni = 'UIP'
+    else:
+        call_platform_zni = 'UNKNOWN'
     call_data_msg = f"{omni_msg_id}_{call_system_zni}_{call_number_zni}_{call_platform_zni}_zni"
     buttons: list = [InlineKeyboardButton("Завершено успешно",
                                           callback_data=f"ok_{call_data_msg}"),
@@ -704,14 +716,28 @@ def query_handler(call):
 def query_handler(call):
     bot.answer_callback_query(callback_query_id=call.id, text='')
     zni_status, msg_id, system_zni, mnemo_system_zni, number_zni, platform_zni, _ = call.data.split('_')
-    if platform_zni == 'OS':
-        platform_zni = "#Общие_сервисы"
-    elif platform_zni == 'SS':
-        platform_zni = "Служебные_сервисы"
+    if platform_zni == 'OSP':
+        platform_zni = "#ОСП"
+    elif platform_zni == 'OSKK':
+        platform_zni = "#ОСКК"
+    elif platform_zni == 'ССА':
+        platform_zni = "#ССА"
+    elif platform_zni == 'SSRD':
+        platform_zni = "#ССРД"
+    elif platform_zni == 'SSP':
+        platform_zni = "#ССП"
     elif platform_zni == 'EPA':
-        platform_zni = "ЕПА"
+        platform_zni = "#ЕПА"
+    elif platform_zni == 'FOSP':
+        platform_zni = "#ФОСП"
+    elif platform_zni == 'SPV':
+        platform_zni = "#СПВ"
+    elif platform_zni == 'UIP':
+        platform_zni = "#УИП"
     else:
-        platform_zni = 'УИП'
+        platform_zni = 'UNKNOWN'
+
+
     msg_text = f"{platform_zni}\nСервис {system_zni} {mnemo_system_zni}\nРаботы по ЗНИ {number_zni}"
     if zni_status == "ok":
         msg = bot.edit_message_text(
